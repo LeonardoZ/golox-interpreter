@@ -2,7 +2,7 @@ package parser
 
 import "fmt"
 
-func error(line int, message string) {
+func LogError(line int, message string) {
 	report(line, "", message)
 }
 

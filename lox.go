@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io/ioutil"
-	parser "loxlang/parser"
+	"loxlang/parser"
 	"os"
 	"strings"
 )
@@ -50,11 +50,9 @@ func runPrompt() {
 	}
 }
 func run(content string) {
-	var tokens []*parser.Token = parser.ScanTokens(content)
-	if tokens != nil {
-		for _, t := range tokens {
-			fmt.Printf("Char: %s - Pos: %b\n", t.Char, t.Pos)
-		}
-	}
+	tokens := parser.ScanTokens(content)
 
+	for _, token := range tokens {
+		fmt.Println(token)
+	}
 }
