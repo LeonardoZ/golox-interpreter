@@ -12,15 +12,38 @@ import (
 var hadError = false
 
 func main() {
-	args := os.Args[0:]
-	fmt.Println()
-	if len(args) > 2 {
-		fmt.Println("Usage: glox [script]")
-	} else if len(args) == 2 {
-		runFile(args[1])
-	} else {
-		runPrompt()
+	// (* (- 123) (group 45.67))
+	expr := parser.Binary{
+		&parser.Unary{
+			parser.Token{
+				parser.MINUS, "-", nil, 1,
+			},
+			&parser.Literal{
+				123,
+			},
+		},
+		parser.Token{
+			parser.STAR, "*", nil, 1,
+		},
+		&parser.Grouping{
+			&parser.Literal{
+				45.67,
+			},
+		},
 	}
+	var printer parser.AstPrinter = parser.AstPrinter{}
+	printer.Print(&expr)
+
+	/*
+		args := os.Args[0:]
+		fmt.Println()
+		if len(args) > 2 {
+			fmt.Println("Usage: glox [script]")
+		} else if len(args) == 2 {
+			runFile(args[1])
+		} else {
+			runPrompt()
+		} */
 }
 
 func runFile(filePath string) {

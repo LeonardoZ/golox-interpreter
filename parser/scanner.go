@@ -5,13 +5,6 @@ import (
 	"strconv"
 )
 
-type Token struct {
-	Type    TokenType
-	Lexeme  string
-	Literal interface{}
-	Line    int
-}
-
 var start, current, line int
 var source []rune
 var tokens []Token

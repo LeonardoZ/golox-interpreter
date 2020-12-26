@@ -69,3 +69,10 @@ var Keywords map[string]TokenType = map[string]TokenType{
 	"var":    VAR,
 	"while":  WHILE,
 }
+
+type Token struct {
+	Type    TokenType
+	Lexeme  string
+	Literal interface{}
+	Line    int
+}
