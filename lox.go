@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"loxlang/parser"
+	"loxlang/parser/def"
+	"loxlang/parser/lexer"
 	"os"
 	"strings"
 )
@@ -12,38 +14,15 @@ import (
 var hadError = false
 
 func main() {
-	// (* (- 123) (group 45.67))
-	expr := parser.Binary{
-		&parser.Unary{
-			parser.Token{
-				parser.MINUS, "-", nil, 1,
-			},
-			&parser.Literal{
-				123,
-			},
-		},
-		parser.Token{
-			parser.STAR, "*", nil, 1,
-		},
-		&parser.Grouping{
-			&parser.Literal{
-				45.67,
-			},
-		},
+	args := os.Args[0:]
+	fmt.Println()
+	if len(args) > 2 {
+		fmt.Println("Usage: glox [script]")
+	} else if len(args) == 2 {
+		runFile(args[1])
+	} else {
+		runPrompt()
 	}
-	var printer parser.AstPrinter = parser.AstPrinter{}
-	printer.Print(&expr)
-
-	/*
-		args := os.Args[0:]
-		fmt.Println()
-		if len(args) > 2 {
-			fmt.Println("Usage: glox [script]")
-		} else if len(args) == 2 {
-			runFile(args[1])
-		} else {
-			runPrompt()
-		} */
 }
 
 func runFile(filePath string) {
@@ -73,9 +52,12 @@ func runPrompt() {
 	}
 }
 func run(content string) {
-	tokens := parser.ScanTokens(content)
+	tokens := lexer.ScanTokens(content)
+	result := parser.Parse(tokens)
 
-	for _, token := range tokens {
-		fmt.Println(token)
+	if hadError {
+		return
 	}
+	ast := def.AstPrinter{}
+	ast.Print(result)
 }

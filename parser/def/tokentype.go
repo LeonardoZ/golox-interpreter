@@ -1,4 +1,4 @@
-package parser
+package def
 
 type TokenType int32
 

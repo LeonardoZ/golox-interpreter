@@ -1,4 +1,4 @@
-package parser
+package def
 
 type StrVisitor interface {
 	visitBinaryExprStr(binary *Binary) string
@@ -8,14 +8,21 @@ type StrVisitor interface {
 }
 
 type Expr interface {
-	acceptStr(visitor StrVisitor) string
+	AcceptStr(visitor StrVisitor) string
+}
+
+type EmptyExpr struct {
+}
+
+func (empty *EmptyExpr) AcceptStr(v StrVisitor) string {
+	return ""
 }
 
 type Literal struct {
 	Value interface{}
 }
 
-func (literal *Literal) acceptStr(v StrVisitor) string {
+func (literal *Literal) AcceptStr(v StrVisitor) string {
 	return v.visitLiteralExprStr(literal)
 }
 
@@ -23,7 +30,7 @@ type Grouping struct {
 	Expression Expr
 }
 
-func (grouping *Grouping) acceptStr(v StrVisitor) string {
+func (grouping *Grouping) AcceptStr(v StrVisitor) string {
 	return v.visitGroupingExprStr(grouping)
 }
 
@@ -33,7 +40,7 @@ type Binary struct {
 	Right Expr
 }
 
-func (binary *Binary) acceptStr(v StrVisitor) string {
+func (binary *Binary) AcceptStr(v StrVisitor) string {
 	return v.visitBinaryExprStr(binary)
 }
 
@@ -42,6 +49,6 @@ type Unary struct {
 	Right Expr
 }
 
-func (unary *Unary) acceptStr(v StrVisitor) string {
+func (unary *Unary) AcceptStr(v StrVisitor) string {
 	return v.visitUnaryExpStr(unary)
 }

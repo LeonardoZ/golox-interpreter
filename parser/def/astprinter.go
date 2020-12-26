@@ -1,13 +1,15 @@
-package parser
+package def
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // AstPrinter - implements Visitor Pattern
 type AstPrinter struct {
 }
 
 func (astPrinter *AstPrinter) Print(expr Expr) {
-	fmt.Println(expr.acceptStr(astPrinter))
+	fmt.Println(expr.AcceptStr(astPrinter))
 }
 
 func (astPrinter *AstPrinter) visitBinaryExprStr(binary *Binary) string {
@@ -34,7 +36,7 @@ func (astPrinter *AstPrinter) parenthesize(name string, exprs ...Expr) string {
 	result += "(" + name
 	for _, e := range exprs {
 		result += " "
-		result += e.acceptStr(astPrinter)
+		result += e.AcceptStr(astPrinter)
 	}
 	result += ")"
 	return result
