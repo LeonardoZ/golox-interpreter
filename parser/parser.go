@@ -13,7 +13,6 @@ func Parse(input []def.Token) def.Expr {
 	expr, _ := expression()
 	// already handled
 	return expr
-
 }
 
 func expression() (def.Expr, error) {

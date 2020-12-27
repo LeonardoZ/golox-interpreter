@@ -8,6 +8,33 @@ import (
 type AstPrinter struct {
 }
 
+func (empty *EmptyExpr) AcceptStr(v StrVisitor) string {
+	return ""
+}
+
+func (literal *Literal) AcceptStr(v StrVisitor) string {
+	return v.visitLiteralExprStr(literal)
+}
+
+func (grouping *Grouping) AcceptStr(v StrVisitor) string {
+	return v.visitGroupingExprStr(grouping)
+}
+
+func (binary *Binary) AcceptStr(v StrVisitor) string {
+	return v.visitBinaryExprStr(binary)
+}
+
+func (unary *Unary) AcceptStr(v StrVisitor) string {
+	return v.visitUnaryExpStr(unary)
+}
+
+type StrVisitor interface {
+	visitBinaryExprStr(binary *Binary) string
+	visitUnaryExpStr(unary *Unary) string
+	visitGroupingExprStr(grouping *Grouping) string
+	visitLiteralExprStr(literal *Literal) string
+}
+
 func (astPrinter *AstPrinter) Print(expr Expr) {
 	fmt.Println(expr.AcceptStr(astPrinter))
 }
