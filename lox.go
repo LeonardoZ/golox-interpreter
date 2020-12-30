@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-var hadError = false
+var hadError bool = false
 
 func main() {
 	args := os.Args[0:]
@@ -60,4 +60,8 @@ func run(content string) {
 	}
 	ast := def.AstPrinter{}
 	ast.Print(result)
+	interpreter := def.Interpreter{}
+	evaluated := interpreter.Evaluate(result)
+	fmt.Println(evaluated)
+
 }

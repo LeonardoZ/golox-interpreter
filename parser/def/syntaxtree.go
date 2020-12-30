@@ -2,7 +2,7 @@ package def
 
 type Expr interface {
 	AcceptStr(visitor StrVisitor) string
-	Accept(interpreterVisitor Interpreter) interface{}
+	Accept(interpreterVisitor InterpreterVisitor) interface{}
 }
 
 type EmptyExpr struct {

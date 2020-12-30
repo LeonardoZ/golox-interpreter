@@ -1,10 +1,10 @@
 package def
 
 type InterpreterVisitor interface {
-	visitBinaryExpr(binary *Binary) string
-	visitUnaryExpr(unary *Unary) string
-	visitGroupingExpr(grouping *Grouping) string
-	visitLiteralExpr(literal *Literal) string
+	visitBinaryExpr(binary *Binary) interface{}
+	visitUnaryExpr(unary *Unary) interface{}
+	visitGroupingExpr(grouping *Grouping) interface{}
+	visitLiteralExpr(literal *Literal) interface{}
 }
 
 // Interpreter - implements Visitor Pattern
@@ -16,12 +16,12 @@ func (i *Interpreter) visitLiteralExpr(literal *Literal) interface{} {
 }
 
 func (i *Interpreter) visitGroupingExpr(grouping *Grouping) interface{} {
-	return i.evaluate(grouping.Expression)
+	return i.Evaluate(grouping.Expression)
 }
 
 func (i *Interpreter) visitBinaryExpr(binary *Binary) interface{} {
-	right := i.evaluate(binary.Right)
-	left := i.evaluate(binary.Left)
+	right := i.Evaluate(binary.Right)
+	left := i.Evaluate(binary.Left)
 
 	switch binary.Token.Type {
 	case GREATER:
@@ -60,14 +60,12 @@ func (i *Interpreter) visitBinaryExpr(binary *Binary) interface{} {
 }
 
 func (i *Interpreter) visitUnaryExpr(unary *Unary) interface{} {
-	right := i.evaluate(unary.Right)
+	right := i.Evaluate(unary.Right)
 	switch unary.Token.Type {
 	case BANG:
 		return !i.isTruthy(right)
-		break
 	case MINUS:
 		return -right.(int)
-		break
 	}
 	return nil
 }
@@ -92,7 +90,7 @@ func (i Interpreter) isEqual(a interface{}, b interface{}) bool {
 	return a == b
 }
 
-func (i Interpreter) evaluate(expr Expr) interface{} {
+func (i *Interpreter) Evaluate(expr Expr) interface{} {
 	return expr.Accept(i)
 }
 
