@@ -5,14 +5,56 @@ import (
 )
 
 var tokens []def.Token
+var stmts []def.Stmt
 var current int
 
 // Parse is cool
-func Parse(input []def.Token) def.Expr {
+func Parse(input []def.Token) []def.Stmt {
 	tokens = input
-	expr, _ := expression()
-	// already handled
-	return expr
+	for !isAtEnd() {
+		stmt, err := statement()
+		// todo error handling
+		if err != nil {
+			return []def.Stmt{}
+		}
+		stmts = append(stmts, stmt)
+	}
+	return stmts
+}
+
+func statement() (def.Stmt, error) {
+	if match(def.PRINT) {
+		return printStatement()
+	}
+	return expressionStatement()
+}
+
+func printStatement() (def.Stmt, error) {
+	expr, err := expression()
+	if err != nil {
+		return nil, err
+	}
+	_, consErr := consume(def.SEMICOLON, "Expect ';' after value")
+	if consErr != nil {
+		return nil, consErr
+	}
+	return &def.Print{
+		Expr: expr,
+	}, nil
+}
+
+func expressionStatement() (def.Stmt, error) {
+	expr, err := expression()
+	if err != nil {
+		return nil, err
+	}
+	_, consErr := consume(def.SEMICOLON, "Expect ';' after value")
+	if consErr != nil {
+		return nil, consErr
+	}
+	return &def.ExprStmt{
+		Expr: expr,
+	}, nil
 }
 
 func expression() (def.Expr, error) {

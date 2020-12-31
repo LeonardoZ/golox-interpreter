@@ -1,9 +1,24 @@
 package def
 
+// Stmt Base type for two kind of statements: Expression and Print. More to come.
+type Stmt interface {
+	accept(visitor StatementVisitor) *RuntimeError
+}
+
+// ExprStmt Expression Statements
+type ExprStmt struct {
+	Expr Expr
+}
+
+// Print is a simple Print statement for the language
+type Print struct {
+	Expr Expr
+}
+
 // Expr Mostly generic Tree Node
 type Expr interface {
 	acceptStr(visitor StrVisitor) string
-	accept(interpreterVisitor InterpreterVisitor) (interface{}, *RuntimeError)
+	accept(interpreterVisitor ExpressionVisitor) (interface{}, *RuntimeError)
 }
 
 // EmptyExpr Just an "empty value" implementation for Expr

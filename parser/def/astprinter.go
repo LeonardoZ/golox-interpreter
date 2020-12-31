@@ -4,6 +4,14 @@ import (
 	"fmt"
 )
 
+// StrVisitor Interface
+type StrVisitor interface {
+	visitBinaryExprStr(binary *Binary) string
+	visitUnaryExpStr(unary *Unary) string
+	visitGroupingExprStr(grouping *Grouping) string
+	visitLiteralExprStr(literal *Literal) string
+}
+
 // AstPrinter - implements Visitor Pattern
 type AstPrinter struct {
 }
@@ -26,14 +34,6 @@ func (binary *Binary) acceptStr(v StrVisitor) string {
 
 func (unary *Unary) acceptStr(v StrVisitor) string {
 	return v.visitUnaryExpStr(unary)
-}
-
-// StrVisitor Interface
-type StrVisitor interface {
-	visitBinaryExprStr(binary *Binary) string
-	visitUnaryExpStr(unary *Unary) string
-	visitGroupingExprStr(grouping *Grouping) string
-	visitLiteralExprStr(literal *Literal) string
 }
 
 // Print Prints the result of the AST

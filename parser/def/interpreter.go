@@ -6,12 +6,18 @@ import (
 	"strings"
 )
 
-// InterpreterVisitor Interface
-type InterpreterVisitor interface {
+// ExpressionVisitor Interface
+type ExpressionVisitor interface {
 	visitBinaryExpr(binary *Binary) (interface{}, *RuntimeError)
 	visitUnaryExpr(unary *Unary) (interface{}, *RuntimeError)
 	visitGroupingExpr(grouping *Grouping) (interface{}, *RuntimeError)
 	visitLiteralExpr(literal *Literal) (interface{}, *RuntimeError)
+}
+
+// StatementVisitor Interface
+type StatementVisitor interface {
+	visitExpressionStmt(exprStmt *ExprStmt) *RuntimeError
+	visitPrintStmt(print *Print) *RuntimeError
 }
 
 // Interpreter - implements Visitor Pattern
@@ -19,15 +25,22 @@ type Interpreter struct {
 }
 
 // Interpret Main method of Interpreter
-func (i *Interpreter) Interpret(expr Expr) string {
-	value, err := i.evaluate(expr)
-	if err != nil {
-		ReportRuntimeError(err)
-		return ""
+func (i *Interpreter) Interpret(stmts []Stmt) {
+	for _, stmt := range stmts {
+		err := i.execute(stmt)
+		if err != nil {
+			ReportRuntimeError(err)
+			break
+		}
 	}
-	return i.stringfy(value)
 
 }
+
+func (i *Interpreter) execute(stmt Stmt) *RuntimeError {
+	err := stmt.accept(i)
+	return err
+}
+
 func (i *Interpreter) stringfy(value interface{}) string {
 	if value == nil {
 		return ""
@@ -43,6 +56,23 @@ func (i *Interpreter) stringfy(value interface{}) string {
 	}
 
 	return fmt.Sprintf("%v", value)
+}
+
+func (i *Interpreter) visitExpressionStmt(exprStmt *ExprStmt) *RuntimeError {
+	_, err := i.evaluate(exprStmt.Expr)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (i *Interpreter) visitPrintStmt(print *Print) *RuntimeError {
+	value, err := i.evaluate(print.Expr)
+	if err != nil {
+		return err
+	}
+	fmt.Println(i.stringfy(value))
+	return nil
 }
 
 func (i *Interpreter) visitLiteralExpr(literal *Literal) (interface{}, *RuntimeError) {
@@ -222,22 +252,30 @@ func (i *Interpreter) evaluate(expr Expr) (interface{}, *RuntimeError) {
 /*
 	Methods implementation of every
 */
-func (empty *EmptyExpr) accept(v InterpreterVisitor) (interface{}, *RuntimeError) {
+func (exprStmt *ExprStmt) accept(v StatementVisitor) *RuntimeError {
+	return v.visitExpressionStmt(exprStmt)
+}
+
+func (print *Print) accept(v StatementVisitor) *RuntimeError {
+	return v.visitPrintStmt(print)
+}
+
+func (empty *EmptyExpr) accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
 	return "", nil
 }
 
-func (literal *Literal) accept(v InterpreterVisitor) (interface{}, *RuntimeError) {
+func (literal *Literal) accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
 	return v.visitLiteralExpr(literal)
 }
 
-func (grouping *Grouping) accept(v InterpreterVisitor) (interface{}, *RuntimeError) {
+func (grouping *Grouping) accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
 	return v.visitGroupingExpr(grouping)
 }
 
-func (binary *Binary) accept(v InterpreterVisitor) (interface{}, *RuntimeError) {
+func (binary *Binary) accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
 	return v.visitBinaryExpr(binary)
 }
 
-func (unary *Unary) accept(v InterpreterVisitor) (interface{}, *RuntimeError) {
+func (unary *Unary) accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
 	return v.visitUnaryExpr(unary)
 }

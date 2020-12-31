@@ -54,15 +54,17 @@ func runPrompt() {
 }
 func run(content string) {
 	tokens := lexer.ScanTokens(content)
-	result := parser.Parse(tokens)
+	stmts := parser.Parse(tokens)
+	interpreter := def.Interpreter{}
+	interpreter.Interpret(stmts)
 
 	if def.HadError {
 		return
-	}
-	ast := def.AstPrinter{}
-	ast.Print(result)
-	interpreter := def.Interpreter{}
-	evaluated := interpreter.Interpret(result)
-	fmt.Println("|: " + evaluated)
+	} /*
+		ast := def.AstPrinter{}
+		ast.Print(result)
+		interpreter := def.Interpreter{}
+		evaluated := interpreter.Interpret(result)
+		fmt.Println("|: " + evaluated) */
 
 }
