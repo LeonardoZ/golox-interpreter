@@ -9,5 +9,5 @@ type RuntimeError struct {
 }
 
 func (err *RuntimeError) Error() string {
-	return fmt.Sprintf("[line=%b] Error %s", err.Token.Line, err.Message)
+	return fmt.Sprintf("[line=%d] Error: %s", err.Token.Line, err.Message)
 }

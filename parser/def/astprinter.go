@@ -8,26 +8,27 @@ import (
 type AstPrinter struct {
 }
 
-func (empty *EmptyExpr) AcceptStr(v StrVisitor) string {
+func (empty *EmptyExpr) acceptStr(v StrVisitor) string {
 	return ""
 }
 
-func (literal *Literal) AcceptStr(v StrVisitor) string {
+func (literal *Literal) acceptStr(v StrVisitor) string {
 	return v.visitLiteralExprStr(literal)
 }
 
-func (grouping *Grouping) AcceptStr(v StrVisitor) string {
+func (grouping *Grouping) acceptStr(v StrVisitor) string {
 	return v.visitGroupingExprStr(grouping)
 }
 
-func (binary *Binary) AcceptStr(v StrVisitor) string {
+func (binary *Binary) acceptStr(v StrVisitor) string {
 	return v.visitBinaryExprStr(binary)
 }
 
-func (unary *Unary) AcceptStr(v StrVisitor) string {
+func (unary *Unary) acceptStr(v StrVisitor) string {
 	return v.visitUnaryExpStr(unary)
 }
 
+// StrVisitor Interface
 type StrVisitor interface {
 	visitBinaryExprStr(binary *Binary) string
 	visitUnaryExpStr(unary *Unary) string
@@ -35,8 +36,9 @@ type StrVisitor interface {
 	visitLiteralExprStr(literal *Literal) string
 }
 
+// Print Prints the result of the AST
 func (astPrinter *AstPrinter) Print(expr Expr) {
-	fmt.Println(expr.AcceptStr(astPrinter))
+	fmt.Println(">: " + expr.acceptStr(astPrinter))
 }
 
 func (astPrinter *AstPrinter) visitBinaryExprStr(binary *Binary) string {
@@ -63,7 +65,7 @@ func (astPrinter *AstPrinter) parenthesize(name string, exprs ...Expr) string {
 	result += "(" + name
 	for _, e := range exprs {
 		result += " "
-		result += e.AcceptStr(astPrinter)
+		result += e.acceptStr(astPrinter)
 	}
 	result += ")"
 	return result

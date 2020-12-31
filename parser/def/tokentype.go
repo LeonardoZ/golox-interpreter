@@ -1,7 +1,9 @@
 package def
 
+// TokenType is a simple type alias to make things look cool
 type TokenType int32
 
+// Constants representing tokens
 const (
 	// Single-character tokens.
 	LEFTPAREN TokenType = iota
@@ -51,6 +53,7 @@ const (
 	EOF
 )
 
+// Keywords of the language
 var Keywords map[string]TokenType = map[string]TokenType{
 	"and":    AND,
 	"class":  CLASS,
@@ -70,6 +73,7 @@ var Keywords map[string]TokenType = map[string]TokenType{
 	"while":  WHILE,
 }
 
+// Token simples agroups TOken related values
 type Token struct {
 	Type    TokenType
 	Lexeme  string

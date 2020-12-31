@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// InterpreterVisitor Interface
 type InterpreterVisitor interface {
 	visitBinaryExpr(binary *Binary) (interface{}, *RuntimeError)
 	visitUnaryExpr(unary *Unary) (interface{}, *RuntimeError)
@@ -19,7 +20,7 @@ type Interpreter struct {
 
 // Interpret Main method of Interpreter
 func (i *Interpreter) Interpret(expr Expr) string {
-	value, err := i.Evaluate(expr)
+	value, err := i.evaluate(expr)
 	if err != nil {
 		ReportRuntimeError(err)
 		return ""
@@ -49,21 +50,19 @@ func (i *Interpreter) visitLiteralExpr(literal *Literal) (interface{}, *RuntimeE
 }
 
 func (i *Interpreter) visitGroupingExpr(grouping *Grouping) (interface{}, *RuntimeError) {
-	return i.Evaluate(grouping.Expression)
+	return i.evaluate(grouping.Expression)
 }
 
 func (i *Interpreter) visitBinaryExpr(binary *Binary) (interface{}, *RuntimeError) {
 	var ok *RuntimeError
 	var leftVal, rightVal float64
 
-	right, rOk := i.Evaluate(binary.Right)
+	right, rOk := i.evaluate(binary.Right)
 	if rOk != nil {
-		ReportRuntimeError(rOk)
 		return nil, rOk
 	}
-	left, lOk := i.Evaluate(binary.Left)
+	left, lOk := i.evaluate(binary.Left)
 	if lOk != nil {
-		ReportRuntimeError(lOk)
 		return nil, lOk
 	}
 
@@ -71,7 +70,6 @@ func (i *Interpreter) visitBinaryExpr(binary *Binary) (interface{}, *RuntimeErro
 	case GREATER:
 		leftVal, rightVal, ok = i.checkNumberOperands(binary.Token, left, right)
 		if ok != nil {
-			ReportRuntimeError(ok)
 			return nil, ok
 		}
 		return leftVal > rightVal, nil
@@ -79,7 +77,6 @@ func (i *Interpreter) visitBinaryExpr(binary *Binary) (interface{}, *RuntimeErro
 		leftVal, rightVal, ok = i.checkNumberOperands(binary.Token, left, right)
 
 		if ok != nil {
-			ReportRuntimeError(ok)
 			return nil, ok
 		}
 		return leftVal >= rightVal, nil
@@ -87,7 +84,6 @@ func (i *Interpreter) visitBinaryExpr(binary *Binary) (interface{}, *RuntimeErro
 		leftVal, rightVal, ok = i.checkNumberOperands(binary.Token, left, right)
 
 		if ok != nil {
-			ReportRuntimeError(ok)
 			return nil, ok
 		}
 		return leftVal < rightVal, nil
@@ -95,7 +91,6 @@ func (i *Interpreter) visitBinaryExpr(binary *Binary) (interface{}, *RuntimeErro
 		leftVal, rightVal, ok = i.checkNumberOperands(binary.Token, left, right)
 
 		if ok != nil {
-			ReportRuntimeError(ok)
 			return nil, ok
 		}
 		return leftVal <= rightVal, nil
@@ -107,7 +102,6 @@ func (i *Interpreter) visitBinaryExpr(binary *Binary) (interface{}, *RuntimeErro
 		leftVal, rightVal, ok = i.checkNumberOperands(binary.Token, left, right)
 
 		if ok != nil {
-			ReportRuntimeError(ok)
 			return nil, ok
 		}
 		return leftVal - rightVal, nil
@@ -115,15 +109,20 @@ func (i *Interpreter) visitBinaryExpr(binary *Binary) (interface{}, *RuntimeErro
 		leftVal, rightVal, ok = i.checkNumberOperands(binary.Token, left, right)
 
 		if ok != nil {
-			ReportRuntimeError(ok)
 			return nil, ok
+		}
+		if rightVal == 0.0 {
+			divideByZeroError := &RuntimeError{
+				Token:   binary.Token,
+				Message: "Can't divide by 0",
+			}
+			return nil, divideByZeroError
 		}
 		return leftVal / rightVal, nil
 	case STAR:
 		leftVal, rightVal, ok = i.checkNumberOperands(binary.Token, left, right)
 
 		if ok != nil {
-			ReportRuntimeError(ok)
 			return nil, ok
 		}
 		return leftVal * rightVal, nil
@@ -148,25 +147,23 @@ func (i *Interpreter) visitBinaryExpr(binary *Binary) (interface{}, *RuntimeErro
 }
 
 func (i *Interpreter) visitUnaryExpr(unary *Unary) (interface{}, *RuntimeError) {
-	right, ok := i.Evaluate(unary.Right)
+	right, ok := i.evaluate(unary.Right)
 	if ok != nil {
-		ReportRuntimeError(ok)
 		return nil, ok
 	}
 	switch unary.Token.Type {
 	case BANG:
 		res, compErr := i.isTruthy(right)
 		if compErr != nil {
-			ReportRuntimeError(&RuntimeError{
+			return nil, &RuntimeError{
 				Token:   unary.Token,
 				Message: compErr.Error(),
-			})
+			}
 		}
 		return !res, nil
 	case MINUS:
 		value, mOk := i.checkNumberOperand(unary.Token, right)
 		if mOk != nil {
-			ReportRuntimeError(mOk)
 			return nil, mOk
 		}
 		return -value, nil
@@ -218,26 +215,29 @@ func (i Interpreter) checkNumberOperands(token Token, left interface{}, right in
 	return leftVal, rightVal, nil
 }
 
-func (i *Interpreter) Evaluate(expr Expr) (interface{}, *RuntimeError) {
-	return expr.Accept(i)
+func (i *Interpreter) evaluate(expr Expr) (interface{}, *RuntimeError) {
+	return expr.accept(i)
 }
 
-func (empty *EmptyExpr) Accept(v InterpreterVisitor) (interface{}, *RuntimeError) {
+/*
+	Methods implementation of every
+*/
+func (empty *EmptyExpr) accept(v InterpreterVisitor) (interface{}, *RuntimeError) {
 	return "", nil
 }
 
-func (literal *Literal) Accept(v InterpreterVisitor) (interface{}, *RuntimeError) {
+func (literal *Literal) accept(v InterpreterVisitor) (interface{}, *RuntimeError) {
 	return v.visitLiteralExpr(literal)
 }
 
-func (grouping *Grouping) Accept(v InterpreterVisitor) (interface{}, *RuntimeError) {
+func (grouping *Grouping) accept(v InterpreterVisitor) (interface{}, *RuntimeError) {
 	return v.visitGroupingExpr(grouping)
 }
 
-func (binary *Binary) Accept(v InterpreterVisitor) (interface{}, *RuntimeError) {
+func (binary *Binary) accept(v InterpreterVisitor) (interface{}, *RuntimeError) {
 	return v.visitBinaryExpr(binary)
 }
 
-func (unary *Unary) Accept(v InterpreterVisitor) (interface{}, *RuntimeError) {
+func (unary *Unary) accept(v InterpreterVisitor) (interface{}, *RuntimeError) {
 	return v.visitUnaryExpr(unary)
 }

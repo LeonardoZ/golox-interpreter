@@ -63,6 +63,6 @@ func run(content string) {
 	ast.Print(result)
 	interpreter := def.Interpreter{}
 	evaluated := interpreter.Interpret(result)
-	fmt.Println(evaluated)
+	fmt.Println("|: " + evaluated)
 
 }
