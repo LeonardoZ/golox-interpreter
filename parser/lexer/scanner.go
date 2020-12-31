@@ -1,7 +1,6 @@
 package lexer
 
 import (
-	"loxlang/parser"
 	"loxlang/parser/def"
 	"strconv"
 )
@@ -101,7 +100,7 @@ func scanToken() {
 		} else if isAlpha(char) {
 			processIdentifier()
 		} else {
-			parser.LogError(line, "Unexpected character "+string(char))
+			def.LogError(line, "Unexpected character "+string(char))
 		}
 		break
 	}
@@ -116,7 +115,7 @@ func processString() {
 	}
 
 	if isAtEnd() {
-		parser.LogError(line, "Unterminated string")
+		def.LogError(line, "Unterminated string")
 		return
 	}
 
@@ -145,7 +144,7 @@ func processNumber() {
 	numberAsStr := string(source[start:current])
 	res, err := strconv.ParseFloat(numberAsStr, 64)
 	if err != nil {
-		parser.LogError(line, "Invalid number "+numberAsStr)
+		def.LogError(line, "Invalid number "+numberAsStr)
 	}
 	addTokenWithLiteral(def.NUMBER, res)
 }

@@ -1,10 +1,12 @@
-package parser
+package def
 
 import (
 	"errors"
 	"fmt"
-	"loxlang/parser/def"
 )
+
+var HadError bool = false
+var HadRuntimeError bool = false
 
 // LogError - Logs error
 func LogError(line int, message string) {
@@ -16,9 +18,14 @@ func Report(line int, where string, message string) {
 	fmt.Printf("[line=%b] Error %s: %s\n", line, where, message)
 }
 
+func ReportRuntimeError(runtimeError *RuntimeError) {
+	HadRuntimeError = true
+	fmt.Printf(runtimeError.Error())
+}
+
 // Generates an Error
-func CreateError(token def.Token, message string) error {
-	if token.Type == def.EOF {
+func CreateError(token Token, message string) error {
+	if token.Type == EOF {
 		Report(token.Line, " at end ", message)
 	} else {
 		Report(token.Line, " at '"+token.Lexeme+"'", message)

@@ -11,8 +11,6 @@ import (
 	"strings"
 )
 
-var hadError bool = false
-
 func main() {
 	args := os.Args[0:]
 	fmt.Println()
@@ -31,8 +29,11 @@ func runFile(filePath string) {
 		panic(err)
 	}
 	run(string(dat))
-	if hadError {
+	if def.HadError {
 		os.Exit(65)
+	}
+	if def.HadRuntimeError {
+		os.Exit(70)
 	}
 
 }
@@ -47,7 +48,7 @@ func runPrompt() {
 			break
 		}
 		run(line)
-		hadError = false
+		def.HadError = false
 
 	}
 }
@@ -55,13 +56,13 @@ func run(content string) {
 	tokens := lexer.ScanTokens(content)
 	result := parser.Parse(tokens)
 
-	if hadError {
+	if def.HadError {
 		return
 	}
 	ast := def.AstPrinter{}
 	ast.Print(result)
 	interpreter := def.Interpreter{}
-	evaluated := interpreter.Evaluate(result)
+	evaluated := interpreter.Interpret(result)
 	fmt.Println(evaluated)
 
 }

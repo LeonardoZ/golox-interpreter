@@ -169,7 +169,7 @@ func consume(tokenType def.TokenType, message string) (def.Token, error) {
 }
 
 func reportError(token def.Token, message string) error {
-	return CreateError(token, message)
+	return def.CreateError(token, message)
 }
 
 func match(tokenTypes ...def.TokenType) bool {
