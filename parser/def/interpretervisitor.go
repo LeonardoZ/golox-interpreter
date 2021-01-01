@@ -1,0 +1,64 @@
+package def
+
+// ExpressionVisitor Interface
+type ExpressionVisitor interface {
+	VisitBinaryExpr(binary *Binary) (interface{}, *RuntimeError)
+	VisitUnaryExpr(unary *Unary) (interface{}, *RuntimeError)
+	VisitGroupingExpr(grouping *Grouping) (interface{}, *RuntimeError)
+	VisitLiteralExpr(literal *Literal) (interface{}, *RuntimeError)
+	VisitVariableExpr(variable *Variable) (interface{}, *RuntimeError)
+}
+
+// StatementVisitor Interface
+type StatementVisitor interface {
+	VisitExpressionStmt(exprStmt *ExprStmt) *RuntimeError
+	VisitPrintStmt(print *Print) *RuntimeError
+	VisitVar(varStmt *Var) *RuntimeError
+}
+
+/*Expression and Statement Accepts */
+
+// Accept def for type
+func (print *Print) Accept(v StatementVisitor) *RuntimeError {
+	return v.VisitPrintStmt(print)
+}
+
+// Accept def for type
+func (varStmt *Var) Accept(v StatementVisitor) *RuntimeError {
+	return v.VisitVar(varStmt)
+}
+
+// Accept def for type
+func (exprStmt *ExprStmt) Accept(v StatementVisitor) *RuntimeError {
+	return v.VisitExpressionStmt(exprStmt)
+}
+
+// Accept def for type
+func (empty *EmptyExpr) Accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
+	return "", nil
+}
+
+// Accept def for type
+func (literal *Literal) Accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
+	return v.VisitLiteralExpr(literal)
+}
+
+// Accept def for type
+func (grouping *Grouping) Accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
+	return v.VisitGroupingExpr(grouping)
+}
+
+// Accept def for type
+func (binary *Binary) Accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
+	return v.VisitBinaryExpr(binary)
+}
+
+// Accept def for type
+func (unary *Unary) Accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
+	return v.VisitUnaryExpr(unary)
+}
+
+// Accept def for type
+func (variable *Variable) Accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
+	return v.VisitVariableExpr(variable)
+}

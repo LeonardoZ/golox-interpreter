@@ -7,6 +7,7 @@ import (
 	"loxlang/parser"
 	"loxlang/parser/def"
 	"loxlang/parser/lexer"
+	"loxlang/parser/runtime"
 	"os"
 	"strings"
 )
@@ -55,7 +56,7 @@ func runPrompt() {
 func run(content string) {
 	tokens := lexer.ScanTokens(content)
 	stmts := parser.Parse(tokens)
-	interpreter := def.Interpreter{}
+	interpreter := runtime.Interpreter{}
 	interpreter.Interpret(stmts)
 
 	if def.HadError {

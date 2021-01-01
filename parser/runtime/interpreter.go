@@ -1,45 +1,30 @@
-package def
+package runtime
 
 import (
 	"errors"
 	"fmt"
+	"loxlang/parser/def"
 	"strings"
 )
-
-// ExpressionVisitor Interface
-type ExpressionVisitor interface {
-	visitBinaryExpr(binary *Binary) (interface{}, *RuntimeError)
-	visitUnaryExpr(unary *Unary) (interface{}, *RuntimeError)
-	visitGroupingExpr(grouping *Grouping) (interface{}, *RuntimeError)
-	visitLiteralExpr(literal *Literal) (interface{}, *RuntimeError)
-	visitVariableExpr(variable *Variable) (interface{}, *RuntimeError)
-}
-
-// StatementVisitor Interface
-type StatementVisitor interface {
-	visitExpressionStmt(exprStmt *ExprStmt) *RuntimeError
-	visitPrintStmt(print *Print) *RuntimeError
-	visitVar(varStmt *Var) *RuntimeError
-}
 
 // Interpreter - implements Visitor Pattern
 type Interpreter struct {
 }
 
 // Interpret Main method of Interpreter
-func (i *Interpreter) Interpret(stmts []Stmt) {
+func (i *Interpreter) Interpret(stmts []def.Stmt) {
 	for _, stmt := range stmts {
 		err := i.execute(stmt)
 		if err != nil {
-			ReportRuntimeError(err)
+			def.ReportRuntimeError(err)
 			break
 		}
 	}
 
 }
 
-func (i *Interpreter) execute(stmt Stmt) *RuntimeError {
-	err := stmt.accept(i)
+func (i *Interpreter) execute(stmt def.Stmt) *def.RuntimeError {
+	err := stmt.Accept(i)
 	return err
 }
 
@@ -60,7 +45,8 @@ func (i *Interpreter) stringfy(value interface{}) string {
 	return fmt.Sprintf("%v", value)
 }
 
-func (i *Interpreter) visitExpressionStmt(exprStmt *ExprStmt) *RuntimeError {
+// VisitExpressionStmt Handles ExprStmt
+func (i *Interpreter) VisitExpressionStmt(exprStmt *def.ExprStmt) *def.RuntimeError {
 	_, err := i.evaluate(exprStmt.Expr)
 	if err != nil {
 		return err
@@ -68,7 +54,8 @@ func (i *Interpreter) visitExpressionStmt(exprStmt *ExprStmt) *RuntimeError {
 	return nil
 }
 
-func (i *Interpreter) visitPrintStmt(print *Print) *RuntimeError {
+// VisitPrintStmt Handles Print
+func (i *Interpreter) VisitPrintStmt(print *def.Print) *def.RuntimeError {
 	value, err := i.evaluate(print.Expr)
 	if err != nil {
 		return err
@@ -77,24 +64,29 @@ func (i *Interpreter) visitPrintStmt(print *Print) *RuntimeError {
 	return nil
 }
 
-func (i *Interpreter) visitVar(varStmt *Var) *RuntimeError {
+// VisitVar Handles Var
+func (i *Interpreter) VisitVar(varStmt *def.Var) *def.RuntimeError {
 	return nil
 }
 
-func (i *Interpreter) visitVariableExpr(variable *Variable) (interface{}, *RuntimeError) {
+// VisitVariableExpr Handles ExprStmt
+func (i *Interpreter) VisitVariableExpr(variable *def.Variable) (interface{}, *def.RuntimeError) {
 	return nil, nil
 }
 
-func (i *Interpreter) visitLiteralExpr(literal *Literal) (interface{}, *RuntimeError) {
+// VisitLiteralExpr Handles Literal
+func (i *Interpreter) VisitLiteralExpr(literal *def.Literal) (interface{}, *def.RuntimeError) {
 	return literal.Value, nil
 }
 
-func (i *Interpreter) visitGroupingExpr(grouping *Grouping) (interface{}, *RuntimeError) {
+// VisitGroupingExpr Handles Grouping
+func (i *Interpreter) VisitGroupingExpr(grouping *def.Grouping) (interface{}, *def.RuntimeError) {
 	return i.evaluate(grouping.Expression)
 }
 
-func (i *Interpreter) visitBinaryExpr(binary *Binary) (interface{}, *RuntimeError) {
-	var ok *RuntimeError
+// VisitBinaryExpr Handles Binary
+func (i *Interpreter) VisitBinaryExpr(binary *def.Binary) (interface{}, *def.RuntimeError) {
+	var ok *def.RuntimeError
 	var leftVal, rightVal float64
 
 	right, rOk := i.evaluate(binary.Right)
@@ -107,66 +99,66 @@ func (i *Interpreter) visitBinaryExpr(binary *Binary) (interface{}, *RuntimeErro
 	}
 
 	switch binary.Token.Type {
-	case GREATER:
+	case def.GREATER:
 		leftVal, rightVal, ok = i.checkNumberOperands(binary.Token, left, right)
 		if ok != nil {
 			return nil, ok
 		}
 		return leftVal > rightVal, nil
-	case GREATEREQUAL:
+	case def.GREATEREQUAL:
 		leftVal, rightVal, ok = i.checkNumberOperands(binary.Token, left, right)
 
 		if ok != nil {
 			return nil, ok
 		}
 		return leftVal >= rightVal, nil
-	case LESS:
+	case def.LESS:
 		leftVal, rightVal, ok = i.checkNumberOperands(binary.Token, left, right)
 
 		if ok != nil {
 			return nil, ok
 		}
 		return leftVal < rightVal, nil
-	case LESSEQUAL:
+	case def.LESSEQUAL:
 		leftVal, rightVal, ok = i.checkNumberOperands(binary.Token, left, right)
 
 		if ok != nil {
 			return nil, ok
 		}
 		return leftVal <= rightVal, nil
-	case BANGEQUAL:
+	case def.BANGEQUAL:
 		return !i.isEqual(left, right), nil
-	case EQUALEQUAL:
+	case def.EQUALEQUAL:
 		return i.isEqual(left, right), nil
-	case MINUS:
+	case def.MINUS:
 		leftVal, rightVal, ok = i.checkNumberOperands(binary.Token, left, right)
 
 		if ok != nil {
 			return nil, ok
 		}
 		return leftVal - rightVal, nil
-	case SLASH:
+	case def.SLASH:
 		leftVal, rightVal, ok = i.checkNumberOperands(binary.Token, left, right)
 
 		if ok != nil {
 			return nil, ok
 		}
 		if rightVal == 0.0 {
-			divideByZeroError := &RuntimeError{
+			divideByZeroError := &def.RuntimeError{
 				Token:   binary.Token,
 				Message: "Can't divide by 0",
 			}
 			return nil, divideByZeroError
 		}
 		return leftVal / rightVal, nil
-	case STAR:
+	case def.STAR:
 		leftVal, rightVal, ok = i.checkNumberOperands(binary.Token, left, right)
 
 		if ok != nil {
 			return nil, ok
 		}
 		return leftVal * rightVal, nil
-	case PLUS:
+	case def.PLUS:
 		floatLeft, isFloatLeft := left.(float64)
 		floatRight, isFloatRight := right.(float64)
 		if isFloatLeft && isFloatRight {
@@ -178,7 +170,7 @@ func (i *Interpreter) visitBinaryExpr(binary *Binary) (interface{}, *RuntimeErro
 		if isStringLeft && isStringRight {
 			return stringLeft + stringRight, nil
 		}
-		return nil, &RuntimeError{
+		return nil, &def.RuntimeError{
 			Token:   binary.Token,
 			Message: "Invalid values in + operator",
 		}
@@ -186,22 +178,23 @@ func (i *Interpreter) visitBinaryExpr(binary *Binary) (interface{}, *RuntimeErro
 	return nil, nil
 }
 
-func (i *Interpreter) visitUnaryExpr(unary *Unary) (interface{}, *RuntimeError) {
+// VisitUnaryExpr Handles Unary
+func (i *Interpreter) VisitUnaryExpr(unary *def.Unary) (interface{}, *def.RuntimeError) {
 	right, ok := i.evaluate(unary.Right)
 	if ok != nil {
 		return nil, ok
 	}
 	switch unary.Token.Type {
-	case BANG:
+	case def.BANG:
 		res, compErr := i.isTruthy(right)
 		if compErr != nil {
-			return nil, &RuntimeError{
+			return nil, &def.RuntimeError{
 				Token:   unary.Token,
 				Message: compErr.Error(),
 			}
 		}
 		return !res, nil
-	case MINUS:
+	case def.MINUS:
 		value, mOk := i.checkNumberOperand(unary.Token, right)
 		if mOk != nil {
 			return nil, mOk
@@ -231,10 +224,10 @@ func (i Interpreter) isEqual(a interface{}, b interface{}) bool {
 	return a == b
 }
 
-func (i Interpreter) checkNumberOperand(token Token, operand interface{}) (float64, *RuntimeError) {
+func (i Interpreter) checkNumberOperand(token def.Token, operand interface{}) (float64, *def.RuntimeError) {
 	value, ok := operand.(float64)
 	if !ok {
-		return 0, &RuntimeError{
+		return 0, &def.RuntimeError{
 			Token:   token,
 			Message: "Operand must be a number",
 		}
@@ -242,12 +235,12 @@ func (i Interpreter) checkNumberOperand(token Token, operand interface{}) (float
 	return value, nil
 }
 
-func (i Interpreter) checkNumberOperands(token Token, left interface{}, right interface{}) (float64, float64, *RuntimeError) {
+func (i Interpreter) checkNumberOperands(token def.Token, left interface{}, right interface{}) (float64, float64, *def.RuntimeError) {
 	leftVal, lOk := left.(float64)
 	rightVal, rOk := right.(float64)
 
 	if !lOk || !rOk {
-		return 0, 0, &RuntimeError{
+		return 0, 0, &def.RuntimeError{
 			Token:   token,
 			Message: "Operand must be a number",
 		}
@@ -255,45 +248,6 @@ func (i Interpreter) checkNumberOperands(token Token, left interface{}, right in
 	return leftVal, rightVal, nil
 }
 
-func (i *Interpreter) evaluate(expr Expr) (interface{}, *RuntimeError) {
-	return expr.accept(i)
-}
-
-/*
-	Methods implementation of every
-*/
-func (exprStmt *ExprStmt) accept(v StatementVisitor) *RuntimeError {
-	return v.visitExpressionStmt(exprStmt)
-}
-
-func (print *Print) accept(v StatementVisitor) *RuntimeError {
-	return v.visitPrintStmt(print)
-}
-
-func (varStmt *Var) accept(v StatementVisitor) *RuntimeError {
-	return v.visitVar(varStmt)
-}
-
-func (empty *EmptyExpr) accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
-	return "", nil
-}
-
-func (literal *Literal) accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
-	return v.visitLiteralExpr(literal)
-}
-
-func (grouping *Grouping) accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
-	return v.visitGroupingExpr(grouping)
-}
-
-func (binary *Binary) accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
-	return v.visitBinaryExpr(binary)
-}
-
-func (unary *Unary) accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
-	return v.visitUnaryExpr(unary)
-}
-
-func (variable *Variable) accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
-	return v.visitVariableExpr(variable)
+func (i *Interpreter) evaluate(expr def.Expr) (interface{}, *def.RuntimeError) {
+	return expr.Accept(i)
 }
