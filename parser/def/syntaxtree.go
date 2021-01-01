@@ -10,6 +10,12 @@ type ExprStmt struct {
 	Expr Expr
 }
 
+// Var Variable Declaration
+type Var struct {
+	Name        Token
+	Initializer Expr
+}
+
 // Print is a simple Print statement for the language
 type Print struct {
 	Expr Expr
@@ -46,4 +52,9 @@ type Binary struct {
 type Unary struct {
 	Token Token
 	Right Expr
+}
+
+// Variable represents a variable reference in code
+type Variable struct {
+	Name Token
 }

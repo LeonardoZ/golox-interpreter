@@ -12,14 +12,47 @@ var current int
 func Parse(input []def.Token) []def.Stmt {
 	tokens = input
 	for !isAtEnd() {
-		stmt, err := statement()
-		// todo error handling
+		stmt, err := declaration()
 		if err != nil {
 			return []def.Stmt{}
 		}
 		stmts = append(stmts, stmt)
 	}
 	return stmts
+}
+
+func declaration() (def.Stmt, error) {
+	if match(def.VAR) {
+		varStmt, err := varDeclaration()
+		if err != nil {
+			synchronize()
+		}
+		return varStmt, nil
+	}
+	stmt, err := statement()
+	if err != nil {
+		synchronize()
+	}
+	return stmt, nil
+}
+
+func varDeclaration() (def.Stmt, error) {
+	name, err := consume(def.IDENTIFIER, "Expect variable name")
+	if err != nil {
+		return nil, err
+	}
+	var initializer def.Expr
+	if match(def.EQUAL) {
+		initializer, err = expression()
+		if err != nil {
+			return nil, err
+		}
+	}
+	consume(def.SEMICOLON, "Expect ; after variable decalration")
+	return &def.Var{
+		Name:        name,
+		Initializer: initializer,
+	}, nil
 }
 
 func statement() (def.Stmt, error) {
@@ -171,6 +204,10 @@ func primary() (def.Expr, error) {
 
 	if match(def.NUMBER, def.STRING) {
 		return &def.Literal{Value: previous().Literal}, nil
+	}
+
+	if match(def.IDENTIFIER) {
+		return &def.Variable{Name: previous()}, nil
 	}
 
 	if match(def.LEFTPAREN) {

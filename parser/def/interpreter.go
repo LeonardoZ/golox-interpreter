@@ -12,12 +12,14 @@ type ExpressionVisitor interface {
 	visitUnaryExpr(unary *Unary) (interface{}, *RuntimeError)
 	visitGroupingExpr(grouping *Grouping) (interface{}, *RuntimeError)
 	visitLiteralExpr(literal *Literal) (interface{}, *RuntimeError)
+	visitVariableExpr(variable *Variable) (interface{}, *RuntimeError)
 }
 
 // StatementVisitor Interface
 type StatementVisitor interface {
 	visitExpressionStmt(exprStmt *ExprStmt) *RuntimeError
 	visitPrintStmt(print *Print) *RuntimeError
+	visitVar(varStmt *Var) *RuntimeError
 }
 
 // Interpreter - implements Visitor Pattern
@@ -73,6 +75,14 @@ func (i *Interpreter) visitPrintStmt(print *Print) *RuntimeError {
 	}
 	fmt.Println(i.stringfy(value))
 	return nil
+}
+
+func (i *Interpreter) visitVar(varStmt *Var) *RuntimeError {
+	return nil
+}
+
+func (i *Interpreter) visitVariableExpr(variable *Variable) (interface{}, *RuntimeError) {
+	return nil, nil
 }
 
 func (i *Interpreter) visitLiteralExpr(literal *Literal) (interface{}, *RuntimeError) {
@@ -260,6 +270,10 @@ func (print *Print) accept(v StatementVisitor) *RuntimeError {
 	return v.visitPrintStmt(print)
 }
 
+func (varStmt *Var) accept(v StatementVisitor) *RuntimeError {
+	return v.visitVar(varStmt)
+}
+
 func (empty *EmptyExpr) accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
 	return "", nil
 }
@@ -278,4 +292,8 @@ func (binary *Binary) accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
 
 func (unary *Unary) accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
 	return v.visitUnaryExpr(unary)
+}
+
+func (variable *Variable) accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
+	return v.visitVariableExpr(variable)
 }

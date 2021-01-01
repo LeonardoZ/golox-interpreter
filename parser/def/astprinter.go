@@ -10,6 +10,7 @@ type StrVisitor interface {
 	visitUnaryExpStr(unary *Unary) string
 	visitGroupingExprStr(grouping *Grouping) string
 	visitLiteralExprStr(literal *Literal) string
+	visitVariableExprStr(variable *Variable) string
 }
 
 // AstPrinter - implements Visitor Pattern
@@ -36,6 +37,10 @@ func (unary *Unary) acceptStr(v StrVisitor) string {
 	return v.visitUnaryExpStr(unary)
 }
 
+func (variable *Variable) acceptStr(v StrVisitor) string {
+	return v.visitVariableExprStr(variable)
+}
+
 // Print Prints the result of the AST
 func (astPrinter *AstPrinter) Print(expr Expr) {
 	fmt.Println(">: " + expr.acceptStr(astPrinter))
@@ -58,6 +63,10 @@ func (astPrinter *AstPrinter) visitLiteralExprStr(literal *Literal) string {
 		return "nil"
 	}
 	return fmt.Sprintf("%v", literal.Value)
+}
+
+func (astPrinter *AstPrinter) visitVariableExprStr(variable *Variable) string {
+	return fmt.Sprintf("%s", variable.Name.Literal)
 }
 
 func (astPrinter *AstPrinter) parenthesize(name string, exprs ...Expr) string {
