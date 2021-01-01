@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+var env *Environment = NewEnvironment()
+
 // Interpreter - implements Visitor Pattern
 type Interpreter struct {
 }
@@ -66,12 +68,21 @@ func (i *Interpreter) VisitPrintStmt(print *def.Print) *def.RuntimeError {
 
 // VisitVar Handles Var
 func (i *Interpreter) VisitVar(varStmt *def.Var) *def.RuntimeError {
+	var value interface{}
+	var err *def.RuntimeError
+	if varStmt.Initializer != nil {
+		value, err = i.evaluate(varStmt.Initializer)
+		if err != nil {
+			return err
+		}
+	}
+	env.Define(varStmt.Name.Lexeme, value)
 	return nil
 }
 
 // VisitVariableExpr Handles ExprStmt
 func (i *Interpreter) VisitVariableExpr(variable *def.Variable) (interface{}, *def.RuntimeError) {
-	return nil, nil
+	return env.Get(variable.Name)
 }
 
 // VisitLiteralExpr Handles Literal
