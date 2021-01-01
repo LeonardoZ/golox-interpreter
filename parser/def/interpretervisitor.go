@@ -7,6 +7,7 @@ type ExpressionVisitor interface {
 	VisitGroupingExpr(grouping *Grouping) (interface{}, *RuntimeError)
 	VisitLiteralExpr(literal *Literal) (interface{}, *RuntimeError)
 	VisitVariableExpr(variable *Variable) (interface{}, *RuntimeError)
+	VisitAssignExpr(assign *Assign) (interface{}, *RuntimeError)
 }
 
 // StatementVisitor Interface
@@ -14,6 +15,7 @@ type StatementVisitor interface {
 	VisitExpressionStmt(exprStmt *ExprStmt) *RuntimeError
 	VisitPrintStmt(print *Print) *RuntimeError
 	VisitVar(varStmt *Var) *RuntimeError
+	VisitBlock(block *Block) *RuntimeError
 }
 
 /*Expression and Statement Accepts */
@@ -31,6 +33,11 @@ func (varStmt *Var) Accept(v StatementVisitor) *RuntimeError {
 // Accept def for type
 func (exprStmt *ExprStmt) Accept(v StatementVisitor) *RuntimeError {
 	return v.VisitExpressionStmt(exprStmt)
+}
+
+// Accept def for type
+func (block *Block) Accept(v StatementVisitor) *RuntimeError {
+	return v.VisitBlock(block)
 }
 
 // Accept def for type
@@ -61,4 +68,9 @@ func (unary *Unary) Accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
 // Accept def for type
 func (variable *Variable) Accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
 	return v.VisitVariableExpr(variable)
+}
+
+// Accept def for type
+func (assign *Assign) Accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
+	return v.VisitAssignExpr(assign)
 }

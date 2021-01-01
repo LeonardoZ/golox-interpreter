@@ -7,13 +7,37 @@ import (
 
 // Environment Type for handling variable name x value binding in runtime
 type Environment struct {
-	values map[string]interface{}
+	values    map[string]interface{}
+	enclosing *Environment
+}
+
+// GlobalEnvironment Creates new environment
+func GlobalEnvironment() *Environment {
+	return &Environment{
+		values: make(map[string]interface{}),
+	}
 }
 
 // NewEnvironment Creates new environment
-func NewEnvironment() *Environment {
+func NewEnvironment(enclosing *Environment) *Environment {
 	return &Environment{
-		values: make(map[string]interface{}),
+		values:    make(map[string]interface{}),
+		enclosing: enclosing,
+	}
+}
+
+// Assign Assignes value to a variable
+func (env *Environment) Assign(name def.Token, value interface{}) *def.RuntimeError {
+	value, present := env.values[name.Lexeme]
+	if present {
+		env.values[name.Lexeme] = value
+	}
+	if env.enclosing != nil {
+		return env.enclosing.Assign(name, value)
+	}
+	return &def.RuntimeError{
+		Token:   name,
+		Message: fmt.Sprintf("Undefined variable '%s'.", name.Lexeme),
 	}
 }
 
@@ -27,6 +51,9 @@ func (env *Environment) Get(token def.Token) (interface{}, *def.RuntimeError) {
 	value, present := env.values[token.Lexeme]
 	if present {
 		return value, nil
+	}
+	if env.enclosing != nil {
+		return env.enclosing.Get(token)
 	}
 	return nil, &def.RuntimeError{
 		Token:   token,

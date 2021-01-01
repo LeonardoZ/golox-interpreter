@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var env *Environment = NewEnvironment()
+var env *Environment = GlobalEnvironment()
 
 // Interpreter - implements Visitor Pattern
 type Interpreter struct {
@@ -83,6 +83,32 @@ func (i *Interpreter) VisitVar(varStmt *def.Var) *def.RuntimeError {
 // VisitVariableExpr Handles ExprStmt
 func (i *Interpreter) VisitVariableExpr(variable *def.Variable) (interface{}, *def.RuntimeError) {
 	return env.Get(variable.Name)
+}
+
+// VisitBlock Handles ExprStmt
+func (i *Interpreter) VisitBlock(block *def.Block) *def.RuntimeError {
+	i.executeBlock(block.Stmts, NewEnvironment(env))
+	return nil
+}
+
+func (i *Interpreter) executeBlock(stmts []def.Stmt, outerEnv *Environment) {
+	previous := env
+	// goes back to the previous value
+	defer func() { env = previous }()
+	for _, s := range stmts {
+		i.execute(s)
+	}
+	env = outerEnv
+}
+
+// VisitAssignExpr Handles Grouping
+func (i *Interpreter) VisitAssignExpr(assign *def.Assign) (interface{}, *def.RuntimeError) {
+	value, err := i.evaluate(assign)
+	if err != nil {
+		return nil, err
+	}
+	env.Assign(assign.Name, value)
+	return value, nil
 }
 
 // VisitLiteralExpr Handles Literal

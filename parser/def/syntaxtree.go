@@ -11,6 +11,11 @@ type ExprStmt struct {
 	Expr Expr
 }
 
+// Block Expression Statements
+type Block struct {
+	Stmts []Stmt
+}
+
 // Var Variable Declaration
 type Var struct {
 	Name        Token
@@ -58,4 +63,10 @@ type Unary struct {
 // Variable represents a variable reference in code
 type Variable struct {
 	Name Token
+}
+
+// Assign represents variable assign
+type Assign struct {
+	Name  Token
+	Value Expr
 }

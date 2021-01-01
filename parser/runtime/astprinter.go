@@ -42,6 +42,11 @@ func (astPrinter *AstPrinter) VisitVariableExprStr(variable *def.Variable) strin
 	return fmt.Sprintf("%s", variable.Name.Literal)
 }
 
+// VisitAssignExprStr Handles Variable
+func (astPrinter *AstPrinter) VisitAssignExprStr(assign *def.Assign) string {
+	return "TODO"
+}
+
 func (astPrinter *AstPrinter) parenthesize(name string, exprs ...def.Expr) string {
 	var result string
 	result += "(" + name

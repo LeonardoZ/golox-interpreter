@@ -48,7 +48,10 @@ func varDeclaration() (def.Stmt, error) {
 			return nil, err
 		}
 	}
-	consume(def.SEMICOLON, "Expect ; after variable decalration")
+	_, err = consume(def.SEMICOLON, "Expect ; after variable decalration")
+	if err != nil {
+		return nil, err
+	}
 	return &def.Var{
 		Name:        name,
 		Initializer: initializer,
@@ -59,7 +62,32 @@ func statement() (def.Stmt, error) {
 	if match(def.PRINT) {
 		return printStatement()
 	}
+	if match(def.LEFTBRACE) {
+		stmts, err := block()
+		if err != nil {
+			return nil, err
+		}
+		return &def.Block{
+			Stmts: stmts,
+		}, nil
+	}
 	return expressionStatement()
+}
+
+func block() ([]def.Stmt, error) {
+	stmts := []def.Stmt{}
+	for !check(def.RIGHTBRACE) && !isAtEnd() {
+		stmt, err := declaration()
+		if err != nil {
+			return nil, err
+		}
+		stmts = append(stmts, stmt)
+	}
+	_, err := consume(def.RIGHTBRACE, "Expect '{' after block")
+	if err != nil {
+		return nil, err
+	}
+	return stmts, nil
 }
 
 func printStatement() (def.Stmt, error) {
@@ -91,7 +119,32 @@ func expressionStatement() (def.Stmt, error) {
 }
 
 func expression() (def.Expr, error) {
-	return equality()
+	return assignment()
+}
+
+func assignment() (def.Expr, error) {
+	expr, err := equality()
+	if err != nil {
+		return nil, err
+	}
+
+	if match(def.EQUAL) {
+		equals := previous()
+		value, assignErr := assignment()
+
+		if assignErr != nil {
+			return nil, assignErr
+		}
+		if variable, res := expr.(*def.Variable); res {
+			name := variable.Name
+			return &def.Assign{
+				Name:  name,
+				Value: value,
+			}, nil
+		}
+		reportError(equals, "Invalid assign target")
+	}
+	return expr, nil
 }
 
 func equality() (def.Expr, error) {

@@ -7,6 +7,7 @@ type StrVisitor interface {
 	VisitGroupingExprStr(grouping *Grouping) string
 	VisitLiteralExprStr(literal *Literal) string
 	VisitVariableExprStr(variable *Variable) string
+	VisitAssignExprStr(variable *Assign) string
 }
 
 // AcceptStr def for type
@@ -37,4 +38,9 @@ func (unary *Unary) AcceptStr(v StrVisitor) string {
 // AcceptStr def for type
 func (variable *Variable) AcceptStr(v StrVisitor) string {
 	return v.VisitVariableExprStr(variable)
+}
+
+// AcceptStr def for type
+func (assign *Assign) AcceptStr(v StrVisitor) string {
+	return v.VisitAssignExprStr(assign)
 }
