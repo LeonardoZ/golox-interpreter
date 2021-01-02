@@ -22,7 +22,6 @@ func (i *Interpreter) Interpret(stmts []def.Stmt) {
 			break
 		}
 	}
-
 }
 
 func (i *Interpreter) execute(stmt def.Stmt) *def.RuntimeError {

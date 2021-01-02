@@ -36,36 +36,48 @@ func runFile(filePath string) {
 	if def.HadRuntimeError {
 		os.Exit(70)
 	}
-
 }
 
 func runPrompt() {
 	reader := bufio.NewReader(os.Stdin)
+	interpreter := runtime.Interpreter{}
+	fmt.Println("## GoLox REPL ##")
 	for {
-		fmt.Println("> ")
+		fmt.Print("> ")
 		line, _ := reader.ReadString('\n')
 		line = strings.Replace(line, "\n", "", -1)
 		if line == "" {
 			break
 		}
-		run(line)
-		def.HadError = false
+		tokens := lexer.ScanTokens(line)
+		if def.HadError {
+			def.HadError = false
+			continue
+		}
 
+		stmts, _ := parser.Parse(tokens)
+		if def.HadError {
+			def.HadError = false
+			continue
+		}
+		interpreter.Interpret(stmts)
+		def.HadError = false
 	}
 }
+
 func run(content string) {
 	tokens := lexer.ScanTokens(content)
-	stmts := parser.Parse(tokens)
-	interpreter := runtime.Interpreter{}
-	interpreter.Interpret(stmts)
 
 	if def.HadError {
+		def.HadError = false
 		return
-	} /*
-		ast := def.AstPrinter{}
-		ast.Print(result)
-		interpreter := def.Interpreter{}
-		evaluated := interpreter.Interpret(result)
-		fmt.Println("|: " + evaluated) */
+	}
 
+	stmts, err := parser.Parse(tokens)
+	if err != nil {
+		def.HadError = false
+		return
+	}
+	interpreter := runtime.Interpreter{}
+	interpreter.Interpret(stmts)
 }

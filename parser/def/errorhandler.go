@@ -13,11 +13,13 @@ var HadRuntimeError bool = false
 
 // LogError - Logs error
 func LogError(line int, message string) {
-	Report(line, "", message)
+	HadError = true
+	fmt.Printf("[line=%d] Error: %s\n", line, message)
 }
 
 // Report - Log error with more info
 func Report(line int, where string, message string) {
+	HadError = true
 	fmt.Printf("[line=%d] Error %s: %s\n", line, where, message)
 }
 
@@ -30,9 +32,9 @@ func ReportRuntimeError(runtimeError *RuntimeError) {
 // CreateError Generates an Error
 func CreateError(token Token, message string) error {
 	if token.Type == EOF {
-		Report(token.Line, " at end ", message)
+		Report(token.Line, "at end", message)
 	} else {
-		Report(token.Line, " at '"+token.Lexeme+"'", message)
+		Report(token.Line, "at '"+token.Lexeme+"'", message)
 	}
 	return errors.New(message)
 }

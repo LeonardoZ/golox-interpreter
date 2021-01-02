@@ -9,28 +9,32 @@ var stmts []def.Stmt
 var current int
 
 // Parse is cool
-func Parse(input []def.Token) []def.Stmt {
+func Parse(input []def.Token) ([]def.Stmt, error) {
 	tokens = input
+	current = 0
+	stmts = []def.Stmt{}
 	for !isAtEnd() {
-		stmt, err := declaration()
-		if err != nil {
-			return []def.Stmt{}
+		stmt, _ := declaration()
+		if def.HadError {
+			return []def.Stmt{}, nil
 		}
 		stmts = append(stmts, stmt)
 	}
-	return stmts
+	return stmts, nil
 }
 
 func declaration() (def.Stmt, error) {
 	if match(def.VAR) {
 		varStmt, err := varDeclaration()
 		if err != nil {
+			def.HadError = true
 			synchronize()
 		}
 		return varStmt, nil
 	}
 	stmt, err := statement()
 	if err != nil {
+		def.HadError = true
 		synchronize()
 	}
 	return stmt, nil
@@ -48,7 +52,7 @@ func varDeclaration() (def.Stmt, error) {
 			return nil, err
 		}
 	}
-	_, err = consume(def.SEMICOLON, "Expect ; after variable decalration")
+	_, err = consume(def.SEMICOLON, "Expect ';' after variable declaration")
 	if err != nil {
 		return nil, err
 	}

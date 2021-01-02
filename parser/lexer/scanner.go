@@ -23,7 +23,7 @@ func ScanTokens(input string) []def.Token {
 		scanToken()
 	}
 
-	tokens = append(tokens, def.Token{def.EOF, "", nil, line})
+	tokens = append(tokens, def.Token{Type: def.EOF, Lexeme: "", Literal: nil, Line: line})
 	return tokens
 }
 
