@@ -63,6 +63,10 @@ func varDeclaration() (def.Stmt, error) {
 }
 
 func statement() (def.Stmt, error) {
+	if match(def.FOR) {
+		return forStatement()
+	}
+
 	if match(def.IF) {
 		return ifStatement()
 	}
@@ -85,6 +89,84 @@ func statement() (def.Stmt, error) {
 		}, nil
 	}
 	return expressionStatement()
+}
+
+func forStatement() (def.Stmt, error) {
+	_, err := consume(def.LEFTPAREN, "Expect '(' after 'while'.")
+	if err != nil {
+		return nil, err
+	}
+
+	var initializer def.Stmt
+	if match(def.SEMICOLON) {
+		initializer = nil
+	} else if match(def.VAR) {
+		initializer, err = varDeclaration()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		initializer, err = expressionStatement()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var condition def.Expr
+	if !check(def.SEMICOLON) {
+		condition, err = expression()
+		if err != nil {
+			return nil, err
+		}
+	}
+	_, err = consume(def.SEMICOLON, "Expect ';' after loop condition.")
+	if err != nil {
+		return nil, err
+	}
+
+	var increment def.Expr
+	if !check(def.RIGHTPAREN) {
+		increment, err = expression()
+		if err != nil {
+			return nil, err
+		}
+	}
+	_, err = consume(def.RIGHTPAREN, "Expect ')' after for clauses.")
+	if err != nil {
+		return nil, err
+	}
+	var body def.Stmt
+	body, err = statement()
+	if err != nil {
+		return nil, err
+	}
+
+	if increment != nil {
+		stmts := []def.Stmt{}
+		body = &def.Block{
+			Stmts: append(stmts, body,
+				&def.ExprStmt{
+					Expr: increment,
+				}),
+		}
+	}
+
+	if condition == nil {
+		condition = &def.Literal{Value: true}
+	}
+	body = &def.While{
+		Condition: condition,
+		Body:      body,
+	}
+
+	if initializer != nil {
+		stmts := []def.Stmt{}
+		body = &def.Block{
+			Stmts: append(stmts, initializer, body),
+		}
+	}
+
+	return body, nil
 }
 
 func whileStatement() (def.Stmt, error) {
