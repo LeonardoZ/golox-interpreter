@@ -86,18 +86,25 @@ func (i *Interpreter) VisitVariableExpr(variable *def.Variable) (interface{}, *d
 
 // VisitBlock Handles ExprStmt
 func (i *Interpreter) VisitBlock(block *def.Block) *def.RuntimeError {
-	i.executeBlock(block.Stmts, NewEnvironment(env))
+	err := i.executeBlock(block.Stmts, NewEnvironment(env))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func (i *Interpreter) executeBlock(stmts []def.Stmt, outerEnv *Environment) {
+func (i *Interpreter) executeBlock(stmts []def.Stmt, outerEnv *Environment) *def.RuntimeError {
 	previous := env
 	// goes back to the previous value
 	defer func() { env = previous }()
 	for _, s := range stmts {
-		i.execute(s)
+		err := i.execute(s)
+		if err != nil {
+			return err
+		}
 	}
 	env = outerEnv
+	return nil
 }
 
 // VisitAssignExpr Handles Grouping
@@ -158,9 +165,21 @@ func (i *Interpreter) VisitWhile(whileStmt *def.While) *def.RuntimeError {
 
 		err = i.execute(whileStmt.Body)
 		if err != nil {
-			return err
+			if err.Type == def.CONTROLFLOWBREAK {
+				break
+			} else {
+				return err
+			}
 		}
 
+	}
+	return nil
+}
+
+// VisitControlFlow Handles Grouping
+func (i *Interpreter) VisitControlFlow(controlFlow *def.ControlFlow) *def.RuntimeError {
+	return &def.RuntimeError{
+		Type: controlFlow.Type,
 	}
 }
 

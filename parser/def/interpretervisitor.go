@@ -19,6 +19,7 @@ type StatementVisitor interface {
 	VisitBlock(block *Block) *RuntimeError
 	VisitIf(ifStmt *If) *RuntimeError
 	VisitWhile(whileStmt *While) *RuntimeError
+	VisitControlFlow(controlFlow *ControlFlow) *RuntimeError
 }
 
 /*Expression and Statement Accepts */
@@ -51,6 +52,11 @@ func (whileStmt *While) Accept(v StatementVisitor) *RuntimeError {
 // Accept def for type
 func (block *Block) Accept(v StatementVisitor) *RuntimeError {
 	return v.VisitBlock(block)
+}
+
+// Accept def for type
+func (controlFlow *ControlFlow) Accept(v StatementVisitor) *RuntimeError {
+	return v.VisitControlFlow(controlFlow)
 }
 
 // Accept def for type

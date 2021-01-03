@@ -40,6 +40,11 @@ type While struct {
 	Body      Stmt
 }
 
+// ControlFlow represents break or continue
+type ControlFlow struct {
+	Type ErrorType
+}
+
 // Expr Mostly generic Tree Node
 type Expr interface {
 	AcceptStr(visitor StrVisitor) string

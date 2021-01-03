@@ -51,6 +51,7 @@ const (
 	VAR
 	WHILE
 	EOF
+	BREAK
 )
 
 // Keywords of the language
@@ -71,6 +72,7 @@ var Keywords map[string]TokenType = map[string]TokenType{
 	"true":   TRUE,
 	"var":    VAR,
 	"while":  WHILE,
+	"break":  BREAK,
 }
 
 // Token simples agroups TOken related values

@@ -79,6 +79,10 @@ func statement() (def.Stmt, error) {
 		return whileStatement()
 	}
 
+	if match(def.BREAK) {
+		return breakStatement()
+	}
+
 	if match(def.LEFTBRACE) {
 		stmts, err := block()
 		if err != nil {
@@ -89,6 +93,16 @@ func statement() (def.Stmt, error) {
 		}, nil
 	}
 	return expressionStatement()
+}
+
+func breakStatement() (def.Stmt, error) {
+	_, err := consume(def.SEMICOLON, "Expect ';' after break keyword.")
+	if err != nil {
+		return nil, err
+	}
+	return &def.ControlFlow{
+		Type: def.CONTROLFLOWBREAK,
+	}, nil
 }
 
 func forStatement() (def.Stmt, error) {
