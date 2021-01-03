@@ -34,6 +34,12 @@ type If struct {
 	ElseBranch Stmt
 }
 
+// While represents repetition loop
+type While struct {
+	Condition Expr
+	Body      Stmt
+}
+
 // Expr Mostly generic Tree Node
 type Expr interface {
 	AcceptStr(visitor StrVisitor) string

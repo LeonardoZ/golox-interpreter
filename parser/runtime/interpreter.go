@@ -102,7 +102,7 @@ func (i *Interpreter) executeBlock(stmts []def.Stmt, outerEnv *Environment) {
 
 // VisitAssignExpr Handles Grouping
 func (i *Interpreter) VisitAssignExpr(assign *def.Assign) (interface{}, *def.RuntimeError) {
-	value, err := i.evaluate(assign)
+	value, err := i.evaluate(assign.Value)
 	if err != nil {
 		return nil, err
 	}
@@ -135,6 +135,33 @@ func (i *Interpreter) VisitIf(ifStmt *def.If) *def.RuntimeError {
 		}
 	}
 	return nil
+}
+
+// VisitWhile Handles Grouping
+func (i *Interpreter) VisitWhile(whileStmt *def.While) *def.RuntimeError {
+	for {
+		condition, err := i.evaluate(whileStmt.Condition)
+		if err != nil {
+			return err
+		}
+		result, truthyErr := i.isTruthy(condition)
+		if truthyErr != nil {
+			return &def.RuntimeError{
+				Token:   def.Token{},
+				Message: "Error evaluating isTruthy",
+			}
+		}
+
+		if !result {
+			return nil
+		}
+
+		err = i.execute(whileStmt.Body)
+		if err != nil {
+			return err
+		}
+
+	}
 }
 
 // VisitLiteralExpr Handles Literal

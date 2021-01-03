@@ -18,6 +18,7 @@ type StatementVisitor interface {
 	VisitVar(varStmt *Var) *RuntimeError
 	VisitBlock(block *Block) *RuntimeError
 	VisitIf(ifStmt *If) *RuntimeError
+	VisitWhile(whileStmt *While) *RuntimeError
 }
 
 /*Expression and Statement Accepts */
@@ -40,6 +41,11 @@ func (exprStmt *ExprStmt) Accept(v StatementVisitor) *RuntimeError {
 // Accept def for type
 func (ifStmt *If) Accept(v StatementVisitor) *RuntimeError {
 	return v.VisitIf(ifStmt)
+}
+
+// Accept def for type
+func (whileStmt *While) Accept(v StatementVisitor) *RuntimeError {
+	return v.VisitWhile(whileStmt)
 }
 
 // Accept def for type

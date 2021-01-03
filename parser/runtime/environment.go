@@ -27,13 +27,14 @@ func NewEnvironment(enclosing *Environment) *Environment {
 }
 
 // Assign Assignes value to a variable
-func (env *Environment) Assign(name def.Token, value interface{}) *def.RuntimeError {
-	value, present := env.values[name.Lexeme]
+func (env *Environment) Assign(name def.Token, newValue interface{}) *def.RuntimeError {
+	_, present := env.values[name.Lexeme]
 	if present {
-		env.values[name.Lexeme] = value
+		env.values[name.Lexeme] = newValue
+		return nil
 	}
 	if env.enclosing != nil {
-		return env.enclosing.Assign(name, value)
+		return env.enclosing.Assign(name, newValue)
 	}
 	return &def.RuntimeError{
 		Token:   name,

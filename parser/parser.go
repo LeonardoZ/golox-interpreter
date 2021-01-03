@@ -71,6 +71,10 @@ func statement() (def.Stmt, error) {
 		return printStatement()
 	}
 
+	if match(def.WHILE) {
+		return whileStatement()
+	}
+
 	if match(def.LEFTBRACE) {
 		stmts, err := block()
 		if err != nil {
@@ -81,6 +85,29 @@ func statement() (def.Stmt, error) {
 		}, nil
 	}
 	return expressionStatement()
+}
+
+func whileStatement() (def.Stmt, error) {
+	_, err := consume(def.LEFTPAREN, "Expect '(' after 'while'.")
+	if err != nil {
+		return nil, err
+	}
+	condition, condErr := expression()
+	if condErr != nil {
+		return nil, condErr
+	}
+	_, err = consume(def.RIGHTPAREN, "Expect ')' after 'while' condition.")
+	if err != nil {
+		return nil, err
+	}
+	body, bodyErr := statement()
+	if bodyErr != nil {
+		return nil, bodyErr
+	}
+	return &def.While{
+		Condition: condition,
+		Body:      body,
+	}, nil
 }
 
 func ifStatement() (def.Stmt, error) {
