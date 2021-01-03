@@ -63,9 +63,14 @@ func varDeclaration() (def.Stmt, error) {
 }
 
 func statement() (def.Stmt, error) {
+	if match(def.IF) {
+		return ifStatement()
+	}
+
 	if match(def.PRINT) {
 		return printStatement()
 	}
+
 	if match(def.LEFTBRACE) {
 		stmts, err := block()
 		if err != nil {
@@ -76,6 +81,39 @@ func statement() (def.Stmt, error) {
 		}, nil
 	}
 	return expressionStatement()
+}
+
+func ifStatement() (def.Stmt, error) {
+	_, err := consume(def.LEFTPAREN, "Expect '(' after 'if'.")
+	if err != nil {
+		return nil, err
+	}
+	condition, condErr := expression()
+	if condErr != nil {
+		return nil, condErr
+	}
+	_, err = consume(def.RIGHTPAREN, "Expect ')' after 'if' condition.")
+	if err != nil {
+		return nil, err
+	}
+
+	thenBranch, thenErr := statement()
+	if thenErr != nil {
+		return nil, thenErr
+	}
+	var elseBranch def.Stmt
+	if match(def.ELSE) {
+		elseBranch, err = statement()
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &def.If{
+		Condition:  condition,
+		ThenBranch: thenBranch,
+		ElseBranch: elseBranch,
+	}, nil
+
 }
 
 func block() ([]def.Stmt, error) {
@@ -127,11 +165,10 @@ func expression() (def.Expr, error) {
 }
 
 func assignment() (def.Expr, error) {
-	expr, err := equality()
+	expr, err := or()
 	if err != nil {
 		return nil, err
 	}
-
 	if match(def.EQUAL) {
 		equals := previous()
 		value, assignErr := assignment()
@@ -147,6 +184,46 @@ func assignment() (def.Expr, error) {
 			}, nil
 		}
 		reportError(equals, "Invalid assign target")
+	}
+	return expr, nil
+}
+
+func or() (def.Expr, error) {
+	expr, err := and()
+	if err != nil {
+		return nil, err
+	}
+	for match(def.OR) {
+		operator := previous()
+		right, rErr := and()
+		if rErr != nil {
+			return nil, rErr
+		}
+		expr = &def.Logical{
+			Operator: operator,
+			Left:     expr,
+			Right:    right,
+		}
+	}
+	return expr, nil
+}
+
+func and() (def.Expr, error) {
+	expr, err := equality()
+	if err != nil {
+		return nil, err
+	}
+	for match(def.AND) {
+		operator := previous()
+		right, rErr := equality()
+		if rErr != nil {
+			return nil, rErr
+		}
+		expr = &def.Logical{
+			Operator: operator,
+			Left:     expr,
+			Right:    right,
+		}
 	}
 	return expr, nil
 }

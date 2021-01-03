@@ -110,6 +110,33 @@ func (i *Interpreter) VisitAssignExpr(assign *def.Assign) (interface{}, *def.Run
 	return value, nil
 }
 
+// VisitIf Handles Grouping
+func (i *Interpreter) VisitIf(ifStmt *def.If) *def.RuntimeError {
+	condition, err := i.evaluate(ifStmt.Condition)
+	if err != nil {
+		return err
+	}
+	result, truthyErr := i.isTruthy(condition)
+	if truthyErr != nil {
+		return &def.RuntimeError{
+			Token:   def.Token{},
+			Message: "Error evaluating isTruthy",
+		}
+	}
+	if result {
+		err = i.execute(ifStmt.ThenBranch)
+		if err != nil {
+			return err
+		}
+	} else if ifStmt.ElseBranch != nil {
+		err = i.execute(ifStmt.ElseBranch)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // VisitLiteralExpr Handles Literal
 func (i *Interpreter) VisitLiteralExpr(literal *def.Literal) (interface{}, *def.RuntimeError) {
 	return literal.Value, nil
@@ -212,6 +239,36 @@ func (i *Interpreter) VisitBinaryExpr(binary *def.Binary) (interface{}, *def.Run
 		}
 	}
 	return nil, nil
+}
+
+// VisitLogicalExpr Handles Logical
+func (i *Interpreter) VisitLogicalExpr(logical *def.Logical) (interface{}, *def.RuntimeError) {
+	left, err := i.evaluate(logical.Left)
+	if err != nil {
+		return nil, err
+	}
+	result, tErr := i.isTruthy(left)
+	if tErr != nil {
+		return nil, &def.RuntimeError{
+			Token:   logical.Operator,
+			Message: "Invalid isTruthy boolean parse",
+		}
+	}
+
+	if logical.Operator.Type == def.OR {
+		if result {
+			return left, nil
+		}
+	} else {
+		if !result {
+			return left, nil
+		}
+	}
+	right, rErr := i.evaluate(logical.Right)
+	if rErr != nil {
+		return nil, rErr
+	}
+	return right, nil
 }
 
 // VisitUnaryExpr Handles Unary

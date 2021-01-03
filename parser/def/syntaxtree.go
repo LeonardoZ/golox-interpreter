@@ -27,6 +27,13 @@ type Print struct {
 	Expr Expr
 }
 
+// If represents conditional if statements
+type If struct {
+	Condition  Expr
+	ThenBranch Stmt
+	ElseBranch Stmt
+}
+
 // Expr Mostly generic Tree Node
 type Expr interface {
 	AcceptStr(visitor StrVisitor) string
@@ -52,6 +59,13 @@ type Binary struct {
 	Left  Expr
 	Token Token
 	Right Expr
+}
+
+// Logical represents 'and' and 'or' expressions
+type Logical struct {
+	Left     Expr
+	Operator Token
+	Right    Expr
 }
 
 // Unary represents expressions with one expr and one operator, like !wololo, -12

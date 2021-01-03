@@ -47,6 +47,11 @@ func (astPrinter *AstPrinter) VisitAssignExprStr(assign *def.Assign) string {
 	return "TODO"
 }
 
+// VisitLogicalExprStr Handles Variable
+func (astPrinter *AstPrinter) VisitLogicalExprStr(logical *def.Logical) string {
+	return "TODO"
+}
+
 func (astPrinter *AstPrinter) parenthesize(name string, exprs ...def.Expr) string {
 	var result string
 	result += "(" + name
