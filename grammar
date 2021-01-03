@@ -10,14 +10,14 @@ statement      → exprStmt
                | ifStmt
                | printStmt
                | whileStmt
-               | controlFlowStmt
+               | breakStmt
                | block ;
 
 forStmt        → "for" "(" ( varDecl | exprStmt | ";" )
                  expression? ";"
                  expression? ")" statement ;
 
-controlFlStmt  → ("continue" | "break") ";"
+breakStmt      → "break" ";"
 
 
 whileStmt      → "while" "(" expression ")" statement ;
