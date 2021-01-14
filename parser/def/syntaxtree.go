@@ -34,6 +34,13 @@ type If struct {
 	ElseBranch Stmt
 }
 
+// Function represents a function declaration
+type Function struct {
+	Name   Token
+	Params []Token
+	Body   []Stmt
+}
+
 // While represents repetition loop
 type While struct {
 	Condition Expr
@@ -63,6 +70,13 @@ type Literal struct {
 // Grouping represents parenthesised expressions
 type Grouping struct {
 	Expression Expr
+}
+
+// Call represents a function call
+type Call struct {
+	Callee    Expr
+	Paren     Token
+	Arguments []Expr
 }
 
 // Binary represents expressions with two expr and one operator, like 1 + 2, a > b

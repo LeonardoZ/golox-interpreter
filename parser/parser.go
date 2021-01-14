@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"loxlang/parser/def"
 )
 
@@ -24,6 +25,13 @@ func Parse(input []def.Token) ([]def.Stmt, error) {
 }
 
 func declaration() (def.Stmt, error) {
+	if match(def.FUN) {
+		funStmt, funErr := function("function")
+		if funErr != nil {
+			return nil, funErr
+		}
+		return funStmt, nil
+	}
 	if match(def.VAR) {
 		varStmt, err := varDeclaration()
 		if err != nil {
@@ -38,6 +46,50 @@ func declaration() (def.Stmt, error) {
 		synchronize()
 	}
 	return stmt, nil
+}
+
+func function(kind string) (def.Stmt, error) {
+	name, err := consume(def.IDENTIFIER, fmt.Sprintf("Expected %s name.", kind))
+	if err != nil {
+		return nil, err
+	}
+	_, err = consume(def.LEFTPAREN, fmt.Sprintf("Expect '(' after %s name.", kind))
+	if err != nil {
+		return nil, err
+	}
+	params := []def.Token{}
+	if !check(def.RIGHTPAREN) {
+		for {
+			if len(params) >= 127 {
+				def.CreateError(peek(), "Can't have more than 127 parameters")
+			}
+			paramID, paramErr := consume(def.IDENTIFIER, "Expect parameter name")
+			if paramErr != nil {
+				return nil, paramErr
+			}
+			params = append(params, paramID)
+			if !match(def.COMMA) {
+				break
+			}
+		}
+	}
+	_, err = consume(def.RIGHTPAREN, "Expect ')' after parameters.")
+	if err != nil {
+		return nil, err
+	}
+	_, err = consume(def.LEFTBRACE, fmt.Sprintf("Expect '{' before %s body.", kind))
+	if err != nil {
+		return nil, err
+	}
+	body, bodyErr := block()
+	if bodyErr != nil {
+		return nil, bodyErr
+	}
+	return &def.Function{
+		Name:   name,
+		Params: params,
+		Body:   body,
+	}, nil
 }
 
 func varDeclaration() (def.Stmt, error) {
@@ -443,7 +495,54 @@ func unary() (def.Expr, error) {
 			Right: right,
 		}, nil
 	}
-	return primary()
+	return call()
+}
+
+func call() (def.Expr, error) {
+	expr, err := primary()
+	if err != nil {
+		return nil, err
+	}
+	for {
+		if match(def.LEFTPAREN) {
+			expr, err = finishCall(expr)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			break
+		}
+	}
+	return expr, nil
+}
+
+func finishCall(callee def.Expr) (def.Expr, error) {
+	args := []def.Expr{}
+	if !check(def.RIGHTPAREN) {
+		for {
+			if len(args) >= 127 {
+				return nil, reportError(peek(), "Can't have more than 127 arguments in a function")
+			}
+			expr, err := expression()
+			if err != nil {
+				return nil, err
+			}
+			args = append(args, expr)
+			if !match(def.COMMA) {
+				break
+			}
+		}
+	}
+	paren, parenErr := consume(def.RIGHTPAREN, "Expect ')' after argument list")
+	if parenErr != nil {
+		return nil, parenErr
+	}
+	return &def.Call{
+		Callee:    callee,
+		Paren:     paren,
+		Arguments: args,
+	}, nil
+
 }
 
 func primary() (def.Expr, error) {

@@ -9,6 +9,7 @@ type ExpressionVisitor interface {
 	VisitVariableExpr(variable *Variable) (interface{}, *RuntimeError)
 	VisitAssignExpr(assign *Assign) (interface{}, *RuntimeError)
 	VisitLogicalExpr(logical *Logical) (interface{}, *RuntimeError)
+	VisitCallExpr(call *Call) (interface{}, *RuntimeError)
 }
 
 // StatementVisitor Interface
@@ -20,6 +21,7 @@ type StatementVisitor interface {
 	VisitIf(ifStmt *If) *RuntimeError
 	VisitWhile(whileStmt *While) *RuntimeError
 	VisitControlFlow(controlFlow *ControlFlow) *RuntimeError
+	VisitFunction(function *Function) *RuntimeError
 }
 
 /*Expression and Statement Accepts */
@@ -60,6 +62,11 @@ func (controlFlow *ControlFlow) Accept(v StatementVisitor) *RuntimeError {
 }
 
 // Accept def for type
+func (function *Function) Accept(v StatementVisitor) *RuntimeError {
+	return v.VisitFunction(function)
+}
+
+// Accept def for type
 func (empty *EmptyExpr) Accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
 	return "", nil
 }
@@ -97,4 +104,9 @@ func (variable *Variable) Accept(v ExpressionVisitor) (interface{}, *RuntimeErro
 // Accept def for type
 func (assign *Assign) Accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
 	return v.VisitAssignExpr(assign)
+}
+
+// Accept def for type
+func (call *Call) Accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
+	return v.VisitCallExpr(call)
 }

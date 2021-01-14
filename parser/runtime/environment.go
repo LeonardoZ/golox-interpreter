@@ -13,6 +13,7 @@ type Environment struct {
 
 // GlobalEnvironment Creates new environment
 func GlobalEnvironment() *Environment {
+
 	return &Environment{
 		values: make(map[string]interface{}),
 	}

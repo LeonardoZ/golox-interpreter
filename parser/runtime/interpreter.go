@@ -7,10 +7,18 @@ import (
 	"strings"
 )
 
-var env *Environment = GlobalEnvironment()
+// Globals is the environment with global definitions
+var Globals *Environment
+var env *Environment
 
 // Interpreter - implements Visitor Pattern
 type Interpreter struct {
+}
+
+func init() {
+	Globals = GlobalEnvironment()
+	env = Globals
+	env.Define("clock", &ClockCallable{})
 }
 
 // Interpret Main method of Interpreter
@@ -97,13 +105,13 @@ func (i *Interpreter) executeBlock(stmts []def.Stmt, outerEnv *Environment) *def
 	previous := env
 	// goes back to the previous value
 	defer func() { env = previous }()
+	env = outerEnv
 	for _, s := range stmts {
 		err := i.execute(s)
 		if err != nil {
 			return err
 		}
 	}
-	env = outerEnv
 	return nil
 }
 
@@ -181,6 +189,13 @@ func (i *Interpreter) VisitControlFlow(controlFlow *def.ControlFlow) *def.Runtim
 	return &def.RuntimeError{
 		Type: controlFlow.Type,
 	}
+}
+
+// VisitFunction Handles Function
+func (i *Interpreter) VisitFunction(function *def.Function) *def.RuntimeError {
+	callable := CallableFunction{FunDecl: *function}
+	env.Define(function.Name.Lexeme, callable)
+	return nil
 }
 
 // VisitLiteralExpr Handles Literal
@@ -341,6 +356,38 @@ func (i *Interpreter) VisitUnaryExpr(unary *def.Unary) (interface{}, *def.Runtim
 		return -value, nil
 	}
 	return nil, nil
+}
+
+// VisitCallExpr Handles Call expressions, like ()
+func (i *Interpreter) VisitCallExpr(call *def.Call) (interface{}, *def.RuntimeError) {
+	callee, err := i.evaluate(call.Callee)
+	if err != nil {
+		return nil, err
+	}
+
+	args := []interface{}{}
+	for _, a := range call.Arguments {
+		arg, argErr := i.evaluate(a)
+		if argErr != nil {
+			return nil, argErr
+		}
+		args = append(args, arg)
+	}
+	callable, ok := callee.(CallableFunction)
+	if !ok {
+		return nil, &def.RuntimeError{
+			Token:   call.Paren,
+			Message: "Can only call functions and classes",
+		}
+	}
+
+	if len(args) != callable.Arity() {
+		return nil, &def.RuntimeError{
+			Token:   call.Paren,
+			Message: fmt.Sprintf("Expeted %d argumentos, but got %d", callable.Arity(), len(args)),
+		}
+	}
+	return callable.Call(i, args)
 }
 
 func (i Interpreter) isTruthy(value interface{}) (bool, error) {
