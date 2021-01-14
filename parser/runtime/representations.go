@@ -14,6 +14,7 @@ type Callable interface {
 // CallableFunction is a concrete representation of a user-defined function to be called
 type CallableFunction struct {
 	FunDecl def.Function
+	Closure *Environment
 }
 
 // String counts how many parameters there are in a function
@@ -28,13 +29,21 @@ func (f *CallableFunction) Arity() int {
 
 // Call invoked the function
 func (f *CallableFunction) Call(i *Interpreter, args []interface{}) (interface{}, *def.RuntimeError) {
-	localEnv := NewEnvironment(Globals)
+	localEnv := NewEnvironment(f.Closure)
 	for i, p := range f.FunDecl.Params {
 		(*localEnv).Define(p.Lexeme, args[i])
 	}
 	err := i.executeBlock(f.FunDecl.Body, localEnv)
 	if err != nil {
+		if err.Type == def.RETURNSTMT {
+			return err.Value, nil
+		}
 		return nil, err
 	}
 	return nil, nil
+}
+
+// ReturnValue represents the value that returns from a function
+type ReturnValue struct {
+	Value interface{}
 }

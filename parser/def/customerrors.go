@@ -10,6 +10,7 @@ type RuntimeError struct {
 	Token   Token
 	Message string
 	Type    ErrorType
+	Value   interface{}
 }
 
 func (err *RuntimeError) Error() string {
@@ -20,4 +21,5 @@ func (err *RuntimeError) Error() string {
 const (
 	NORMAL           ErrorType = 0
 	CONTROLFLOWBREAK ErrorType = 1
+	RETURNSTMT       ErrorType = 2
 )

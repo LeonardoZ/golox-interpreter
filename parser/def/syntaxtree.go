@@ -22,6 +22,12 @@ type Var struct {
 	Initializer Expr
 }
 
+// Return returns a value from inside a function
+type Return struct {
+	Keyword Token
+	Value   Expr
+}
+
 // Print is a simple Print statement for the language
 type Print struct {
 	Expr Expr

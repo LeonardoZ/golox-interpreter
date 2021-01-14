@@ -13,6 +13,7 @@ statement      → exprStmt
                | forStmt
                | ifStmt
                | printStmt
+               | returnStmt
                | whileStmt
                | breakStmt
                | block ;
@@ -23,6 +24,7 @@ forStmt        → "for" "(" ( varDecl | exprStmt | ";" )
 
 breakStmt      → "break" ";"
 
+returnStmt     → "return" expression? ";" ;
 
 whileStmt      → "while" "(" expression ")" statement ;
 

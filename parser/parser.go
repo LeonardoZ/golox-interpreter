@@ -127,6 +127,10 @@ func statement() (def.Stmt, error) {
 		return printStatement()
 	}
 
+	if match(def.RETURN) {
+		return returnStatement()
+	}
+
 	if match(def.WHILE) {
 		return whileStatement()
 	}
@@ -233,6 +237,26 @@ func forStatement() (def.Stmt, error) {
 	}
 
 	return body, nil
+}
+
+func returnStatement() (def.Stmt, error) {
+	var value def.Expr
+	var err error
+	keyword := previous()
+	if !check(def.SEMICOLON) {
+		value, err = expression()
+		if err != nil {
+			return nil, err
+		}
+	}
+	_, err = consume(def.SEMICOLON, "Expect ';' after return value")
+	if err != nil {
+		return nil, err
+	}
+	return &def.Return{
+		Keyword: keyword,
+		Value:   value,
+	}, nil
 }
 
 func whileStatement() (def.Stmt, error) {

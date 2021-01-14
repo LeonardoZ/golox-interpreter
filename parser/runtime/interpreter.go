@@ -193,9 +193,25 @@ func (i *Interpreter) VisitControlFlow(controlFlow *def.ControlFlow) *def.Runtim
 
 // VisitFunction Handles Function
 func (i *Interpreter) VisitFunction(function *def.Function) *def.RuntimeError {
-	callable := CallableFunction{FunDecl: *function}
+	callable := CallableFunction{FunDecl: *function, Closure: env}
 	env.Define(function.Name.Lexeme, callable)
 	return nil
+}
+
+// VisitReturnStmt Handles Return inside function
+func (i *Interpreter) VisitReturnStmt(returnStmt *def.Return) *def.RuntimeError {
+	var value interface{}
+	var err *def.RuntimeError
+	if returnStmt.Value != nil {
+		value, err = i.evaluate(returnStmt.Value)
+		if err != nil {
+			return err
+		}
+	}
+	return &def.RuntimeError{
+		Type:  def.RETURNSTMT,
+		Value: value,
+	}
 }
 
 // VisitLiteralExpr Handles Literal

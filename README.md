@@ -12,9 +12,11 @@ Implemented using Java in the book, the only difference is that I'm implementing
 go build or go run lox.go
 (TODO)
 ```
+
 # Example Syntax
 
 file.txt
+
 ```
 print "## Scope";
 var a = "global a";
@@ -48,9 +50,37 @@ for (var e = 0; e <= 50; e = e + 5) {
 	print e;
   }
 }
+
+// Functions
+fun fib(n) {
+  if (n <= 1) return n;
+  return fib(n - 2) + fib(n - 1);
+}
+
+for (var i = 0; i <= 20; i = i + 1) {
+  print fib(i);
+}
+
+
+// Closures
+fun makeCounter() {
+  var i = 0;
+  fun count() {
+    i = i + 1;
+    print i;
+  }
+
+  return count;
+}
+
+var counter = makeCounter();
+counter(); // "1".
+counter(); // "2".
+
 ```
 
 Running:
+
 ```
 go run lox.go file.txt
 ```
