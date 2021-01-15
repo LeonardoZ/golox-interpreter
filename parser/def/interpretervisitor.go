@@ -10,6 +10,7 @@ type ExpressionVisitor interface {
 	VisitAssignExpr(assign *Assign) (interface{}, *RuntimeError)
 	VisitLogicalExpr(logical *Logical) (interface{}, *RuntimeError)
 	VisitCallExpr(call *Call) (interface{}, *RuntimeError)
+	VisitFunctionExpr(fnExpr *FunctionExpr) (interface{}, *RuntimeError)
 }
 
 // StatementVisitor Interface
@@ -115,4 +116,9 @@ func (assign *Assign) Accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
 // Accept def for type
 func (call *Call) Accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
 	return v.VisitCallExpr(call)
+}
+
+// Accept def for type
+func (fnExpr *FunctionExpr) Accept(v ExpressionVisitor) (interface{}, *RuntimeError) {
+	return v.VisitFunctionExpr(fnExpr)
 }

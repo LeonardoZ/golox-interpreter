@@ -77,6 +77,13 @@ var counter = makeCounter();
 counter(); // "1".
 counter(); // "2".
 
+// Anonymouns Functions
+fun apply(val, fn) {
+    return fn(val);
+}
+
+print apply(100, fun(v) { return v * v; }); // 10000
+
 ```
 
 Running:

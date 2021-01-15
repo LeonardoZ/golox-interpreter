@@ -25,7 +25,8 @@ func Parse(input []def.Token) ([]def.Stmt, error) {
 }
 
 func declaration() (def.Stmt, error) {
-	if match(def.FUN) {
+	if check(def.FUN) && checkNext(def.IDENTIFIER) {
+		consume(def.FUN, "")
 		funStmt, funErr := function("function")
 		if funErr != nil {
 			return nil, funErr
@@ -53,7 +54,21 @@ func function(kind string) (def.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, err = consume(def.LEFTPAREN, fmt.Sprintf("Expect '(' after %s name.", kind))
+
+	fnBody, fnErr := functionBody("function")
+	if fnErr != nil {
+		return nil, fnErr
+	}
+	fnBodyParsed := fnBody.(*def.FunctionExpr)
+
+	return &def.Function{
+		Name:     name,
+		FuncExpr: *fnBodyParsed,
+	}, nil
+}
+
+func functionBody(kind string) (def.Expr, error) {
+	_, err := consume(def.LEFTPAREN, fmt.Sprintf("Expect '(' after %s name.", kind))
 	if err != nil {
 		return nil, err
 	}
@@ -85,8 +100,7 @@ func function(kind string) (def.Stmt, error) {
 	if bodyErr != nil {
 		return nil, bodyErr
 	}
-	return &def.Function{
-		Name:   name,
+	return &def.FunctionExpr{
 		Params: params,
 		Body:   body,
 	}, nil
@@ -570,6 +584,14 @@ func finishCall(callee def.Expr) (def.Expr, error) {
 }
 
 func primary() (def.Expr, error) {
+	if match(def.FUN) {
+		expr, fnErr := functionBody("function")
+		if fnErr != nil {
+			return nil, fnErr
+		}
+		return expr, nil
+	}
+
 	if match(def.FALSE) {
 		return &def.Literal{Value: false}, nil
 	}
@@ -595,7 +617,18 @@ func primary() (def.Expr, error) {
 		consume(def.RIGHTPAREN, "EXPECT '(' after expression")
 		return &def.Grouping{Expression: expr}, nil
 	}
+
 	return nil, reportError(peek(), "Expects expression")
+}
+
+func checkNext(tokenType def.TokenType) bool {
+	if isAtEnd() {
+		return false
+	}
+	if tokens[current+1].Type == def.EOF {
+		return false
+	}
+	return tokens[current+1].Type == tokenType
 }
 
 func synchronize() {

@@ -47,13 +47,18 @@ func (astPrinter *AstPrinter) VisitAssignExprStr(assign *def.Assign) string {
 	return "TODO"
 }
 
-// VisitLogicalExprStr Handles Variable
+// VisitLogicalExprStr Handles Logical
 func (astPrinter *AstPrinter) VisitLogicalExprStr(logical *def.Logical) string {
 	return "TODO"
 }
 
-// VisitCallExpr Handles Variable
+// VisitCallExpr Handles Call
 func (astPrinter *AstPrinter) VisitCallExpr(call *def.Call) string {
+	return "TODO"
+}
+
+// VisitFunctionExpr Function Variable
+func (astPrinter *AstPrinter) VisitFunctionExpr(fnExpr *def.FunctionExpr) string {
 	return "TODO"
 }
 

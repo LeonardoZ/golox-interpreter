@@ -10,6 +10,7 @@ type StrVisitor interface {
 	VisitAssignExprStr(variable *Assign) string
 	VisitLogicalExprStr(logical *Logical) string
 	VisitCallExpr(call *Call) string
+	VisitFunctionExpr(fnExpr *FunctionExpr) string
 }
 
 // AcceptStr def for type
@@ -55,4 +56,9 @@ func (assign *Assign) AcceptStr(v StrVisitor) string {
 // AcceptStr def for type
 func (call *Call) AcceptStr(v StrVisitor) string {
 	return v.VisitCallExpr(call)
+}
+
+// AcceptStr def for type
+func (fnExpr *FunctionExpr) AcceptStr(v StrVisitor) string {
+	return v.VisitFunctionExpr(fnExpr)
 }

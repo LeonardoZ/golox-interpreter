@@ -193,9 +193,14 @@ func (i *Interpreter) VisitControlFlow(controlFlow *def.ControlFlow) *def.Runtim
 
 // VisitFunction Handles Function
 func (i *Interpreter) VisitFunction(function *def.Function) *def.RuntimeError {
-	callable := CallableFunction{FunDecl: *function, Closure: env}
+	callable := CallableFunction{Name: function.Name.Lexeme, FunctionExpr: function.FuncExpr, Closure: env}
 	env.Define(function.Name.Lexeme, callable)
 	return nil
+}
+
+// VisitFunctionExpr Handles anonymous functions
+func (i *Interpreter) VisitFunctionExpr(function *def.FunctionExpr) (interface{}, *def.RuntimeError) {
+	return CallableFunction{Name: "", FunctionExpr: *function, Closure: env}, nil
 }
 
 // VisitReturnStmt Handles Return inside function

@@ -4,8 +4,7 @@ declaration    → funDecl
                | varDecl
                | statement ;
 
-funDecl        → "fun" function ;
-function       → IDENTIFIER "(" parameters? ")" block ;
+funDecl        → "fun" IDENTIFIER functionBody ;
 
 varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 
@@ -52,4 +51,15 @@ arguments      → expression ( "," expression )* ;
 
 primary        → NUMBER | STRING | "true" | "false" | "nil"
                | "(" expression ")" 
+               | functionExpr
                | IDENTIFIER ;
+
+functionExpr   → "fun" functionBody ;
+functionBody   →  "(" parameters? ")" block ;
+parameters     → IDENTIFIER ( "," IDENTIFIER )* ;
+
+NUMBER         → DIGIT+ ( "." DIGIT+ )? ;
+STRING         → "\"" <any char except "\"">* "\"" ;
+IDENTIFIER     → ALPHA ( ALPHA | DIGIT )* ;
+ALPHA          → "a" ... "z" | "A" ... "Z" | "_" ;
+DIGIT          → "0" ... "9" ;

@@ -42,9 +42,8 @@ type If struct {
 
 // Function represents a function declaration
 type Function struct {
-	Name   Token
-	Params []Token
-	Body   []Stmt
+	Name     Token
+	FuncExpr FunctionExpr
 }
 
 // While represents repetition loop
@@ -66,6 +65,12 @@ type Expr interface {
 
 // EmptyExpr Just an "empty value" implementation for Expr
 type EmptyExpr struct {
+}
+
+// FunctionExpr represents an anonymous function declaration
+type FunctionExpr struct {
+	Params []Token
+	Body   []Stmt
 }
 
 // Literal represents literal values like "abc", 13, 15.6
