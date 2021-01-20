@@ -176,7 +176,7 @@ func breakStatement() (def.Stmt, error) {
 }
 
 func forStatement() (def.Stmt, error) {
-	_, err := consume(def.LEFTPAREN, "Expect '(' after 'while'.")
+	_, err := consume(def.LEFTPAREN, "Expect '(' after 'for'.")
 	if err != nil {
 		return nil, err
 	}

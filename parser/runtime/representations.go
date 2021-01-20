@@ -34,8 +34,8 @@ func (f *CallableFunction) Arity() int {
 // Call invoked the function
 func (f *CallableFunction) Call(i *Interpreter, args []interface{}) (interface{}, *def.RuntimeError) {
 	localEnv := NewEnvironment(f.Closure)
-	for i, p := range f.FunctionExpr.Params {
-		(*localEnv).Define(p.Lexeme, args[i])
+	for i := range f.FunctionExpr.Params {
+		(*localEnv).Define(args[i])
 	}
 	err := i.executeBlock(f.FunctionExpr.Body, localEnv)
 	if err != nil {

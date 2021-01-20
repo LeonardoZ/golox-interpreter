@@ -7,24 +7,31 @@ import (
 	"strings"
 )
 
-// Globals is the environment with global definitions
-var Globals *Environment
-var env *Environment
-
 // Interpreter - implements Visitor Pattern
 type Interpreter struct {
+	Globals map[string]interface{}
+	Env     *Environment
+	Locals  map[def.Expr]int
+	Slots   map[def.Expr]int
 }
 
-func init() {
-	Globals = GlobalEnvironment()
-	env = Globals
-	env.Define("clock", &ClockCallable{})
+// NewInterpreter creates and sets up new Interpreter
+func NewInterpreter() *Interpreter {
+	globals := map[string]interface{}{}
+	globals["clock"] = &ClockCallable{}
+	return &Interpreter{
+		Globals: globals,
+		Locals:  map[def.Expr]int{},
+		Slots:   map[def.Expr]int{},
+	}
 }
 
 // Interpret Main method of Interpreter
 func (i *Interpreter) Interpret(stmts []def.Stmt) {
-	for _, stmt := range stmts {
-		err := i.execute(stmt)
+	for _, s := range stmts {
+		err := func(stmt def.Stmt) *def.RuntimeError {
+			return i.execute(stmt)
+		}(s)
 		if err != nil {
 			def.ReportRuntimeError(err)
 			break
@@ -35,6 +42,13 @@ func (i *Interpreter) Interpret(stmts []def.Stmt) {
 func (i *Interpreter) execute(stmt def.Stmt) *def.RuntimeError {
 	err := stmt.Accept(i)
 	return err
+}
+
+// Resolve todo
+func (i *Interpreter) Resolve(expr def.Expr, scopeDepth, slot int) *def.RuntimeError {
+	i.Locals[expr] = scopeDepth
+	i.Slots[expr] = slot
+	return nil
 }
 
 func (i *Interpreter) stringfy(value interface{}) string {
@@ -83,18 +97,33 @@ func (i *Interpreter) VisitVar(varStmt *def.Var) *def.RuntimeError {
 			return err
 		}
 	}
-	env.Define(varStmt.Name.Lexeme, value)
+	i.define(varStmt.Name, value)
+
 	return nil
 }
 
 // VisitVariableExpr Handles ExprStmt
 func (i *Interpreter) VisitVariableExpr(variable *def.Variable) (interface{}, *def.RuntimeError) {
-	return env.Get(variable.Name)
+	return i.lookupVariable(variable.Name, variable)
+}
+
+func (i *Interpreter) lookupVariable(name def.Token, expr def.Expr) (interface{}, *def.RuntimeError) {
+	distance, ok := i.Locals[expr]
+	if ok {
+		return i.Env.GetAt(distance, i.Slots[expr])
+	}
+	if globalVal, ok := i.Globals[name.Lexeme]; ok {
+		return globalVal, nil
+	}
+	return nil, &def.RuntimeError{
+		Token:   name,
+		Message: fmt.Sprintf("Undefined variable %s.", name.Lexeme),
+	}
 }
 
 // VisitBlock Handles ExprStmt
 func (i *Interpreter) VisitBlock(block *def.Block) *def.RuntimeError {
-	err := i.executeBlock(block.Stmts, NewEnvironment(env))
+	err := i.executeBlock(block.Stmts, NewEnvironment(i.Env))
 	if err != nil {
 		return err
 	}
@@ -102,12 +131,14 @@ func (i *Interpreter) VisitBlock(block *def.Block) *def.RuntimeError {
 }
 
 func (i *Interpreter) executeBlock(stmts []def.Stmt, outerEnv *Environment) *def.RuntimeError {
-	previous := env
+	previous := i.Env
 	// goes back to the previous value
-	defer func() { env = previous }()
-	env = outerEnv
+	defer func() { i.Env = previous }()
+	i.Env = outerEnv
 	for _, s := range stmts {
-		err := i.execute(s)
+		err := func(stmt def.Stmt) *def.RuntimeError {
+			return i.execute(s)
+		}(s)
 		if err != nil {
 			return err
 		}
@@ -115,14 +146,29 @@ func (i *Interpreter) executeBlock(stmts []def.Stmt, outerEnv *Environment) *def
 	return nil
 }
 
-// VisitAssignExpr Handles Grouping
+// VisitAssignExpr Handles AssignExpr
 func (i *Interpreter) VisitAssignExpr(assign *def.Assign) (interface{}, *def.RuntimeError) {
 	value, err := i.evaluate(assign.Value)
 	if err != nil {
 		return nil, err
 	}
-	env.Assign(assign.Name, value)
-	return value, nil
+
+	distance, ok := i.Locals[assign]
+	slot, okSlot := i.Slots[assign]
+
+	if ok && okSlot {
+		i.Env.AssignAt(distance, value, slot)
+		return value, nil
+	}
+	if _, ok = i.Globals[assign.Name.Lexeme]; ok {
+		i.Globals[assign.Name.Lexeme] = value
+		return value, nil
+	}
+	return nil, &def.RuntimeError{
+		Token:   assign.Name,
+		Message: fmt.Sprintf("Undefined variable %s.", assign.Name.Lexeme),
+	}
+
 }
 
 // VisitIf Handles Grouping
@@ -193,14 +239,14 @@ func (i *Interpreter) VisitControlFlow(controlFlow *def.ControlFlow) *def.Runtim
 
 // VisitFunction Handles Function
 func (i *Interpreter) VisitFunction(function *def.Function) *def.RuntimeError {
-	callable := CallableFunction{Name: function.Name.Lexeme, FunctionExpr: function.FuncExpr, Closure: env}
-	env.Define(function.Name.Lexeme, callable)
+	callable := CallableFunction{Name: function.Name.Lexeme, FunctionExpr: function.FuncExpr, Closure: i.Env}
+	i.define(function.Name, callable)
 	return nil
 }
 
 // VisitFunctionExpr Handles anonymous functions
 func (i *Interpreter) VisitFunctionExpr(function *def.FunctionExpr) (interface{}, *def.RuntimeError) {
-	return CallableFunction{Name: "", FunctionExpr: *function, Closure: env}, nil
+	return CallableFunction{Name: "", FunctionExpr: *function, Closure: i.Env}, nil
 }
 
 // VisitReturnStmt Handles Return inside function
@@ -388,7 +434,9 @@ func (i *Interpreter) VisitCallExpr(call *def.Call) (interface{}, *def.RuntimeEr
 
 	args := []interface{}{}
 	for _, a := range call.Arguments {
-		arg, argErr := i.evaluate(a)
+		arg, argErr := func(aParam def.Expr) (interface{}, *def.RuntimeError) {
+			return i.evaluate(aParam)
+		}(a)
 		if argErr != nil {
 			return nil, argErr
 		}
@@ -457,4 +505,12 @@ func (i Interpreter) checkNumberOperands(token def.Token, left interface{}, righ
 
 func (i *Interpreter) evaluate(expr def.Expr) (interface{}, *def.RuntimeError) {
 	return expr.Accept(i)
+}
+
+func (i *Interpreter) define(name def.Token, value interface{}) {
+	if i.Env != nil {
+		i.Env.Define(value)
+	} else {
+		i.Globals[name.Lexeme] = value
+	}
 }

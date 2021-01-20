@@ -7,6 +7,7 @@ import (
 	"loxlang/parser"
 	"loxlang/parser/def"
 	"loxlang/parser/lexer"
+	"loxlang/parser/pass"
 	"loxlang/parser/runtime"
 	"os"
 	"strings"
@@ -16,7 +17,7 @@ func main() {
 	args := os.Args[0:]
 	fmt.Println()
 	if len(args) > 2 {
-		fmt.Println("Usage: glox [script]")
+		fmt.Println("Usage: lox [script]")
 	} else if len(args) == 2 {
 		runFile(args[1])
 	} else {
@@ -66,6 +67,7 @@ func runPrompt() {
 }
 
 func run(content string) {
+	// lexer
 	tokens := lexer.ScanTokens(content)
 
 	if def.HadError {
@@ -73,11 +75,24 @@ func run(content string) {
 		return
 	}
 
+	// parser
 	stmts, err := parser.Parse(tokens)
 	if err != nil {
 		def.HadError = false
 		return
 	}
-	interpreter := runtime.Interpreter{}
+
+	interpreter := runtime.NewInterpreter()
+
+	// static analyses
+	resolver := pass.NewResolver(*interpreter)
+	resolver.ResolveStmts(stmts)
+
+	if def.HadError {
+		def.HadError = false
+		return
+	}
+	// runtime
 	interpreter.Interpret(stmts)
+
 }
